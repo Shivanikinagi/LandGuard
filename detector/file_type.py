@@ -1,25 +1,46 @@
-# detector/file_type.py
-import magic
+# -*- coding: utf-8 -*-
+"""
+File type detection utility for Pied Piper Compression.
+"""
+
+import mimetypes
+from pathlib import Path
 
 def detect_file_type(file_path: str) -> dict:
-    mime = magic.from_file(file_path, mime=True)
-    filename = file_path.split("/")[-1]
+    """
+    Detects the type and MIME of a file based on its extension.
+    Returns a dictionary with 'type' and 'mime'.
+    """
 
-    if mime.startswith("image/"):
-        file_type = "image"
-        subtype = mime.split("/")[-1]
-    elif mime == "text/plain" or file_path.endswith((".json", ".csv", ".txt", ".xml")):
-        file_type = "text"
-        subtype = "text"
-    elif mime == "audio/x-wav" or file_path.endswith(".wav"):
-        file_type = "audio"
-        subtype = "wav"
+    path = Path(file_path)
+    ext = path.suffix.lower()
+
+    # Try mimetypes first
+    mime, _ = mimetypes.guess_type(file_path)
+
+    # Simple extension-based categorization
+    if ext in [".txt", ".md", ".rtf", ".log"]:
+        ftype = "text"
+    elif ext in [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp"]:
+        ftype = "image"
+    elif ext in [".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a"]:
+        ftype = "audio"
+    elif ext in [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm"]:
+        ftype = "video"
+    elif ext in [".pdf"]:
+        ftype = "pdf"
+    elif ext in [".zip", ".rar", ".7z", ".tar", ".gz", ".bz2"]:
+        ftype = "archive"
+    elif ext in [".csv", ".xls", ".xlsx"]:
+        ftype = "spreadsheet"
+    elif ext in [".json", ".xml", ".yaml", ".yml"]:
+        ftype = "data"
+    elif ext in [".py", ".java", ".cpp", ".c", ".js", ".ts", ".html", ".css"]:
+        ftype = "code"
     else:
-        raise ValueError(f"Unsupported file type: {mime}")
+        ftype = "binary"
 
     return {
-        "type": file_type,
-        "subtype": subtype,
-        "mime": mime,
-        "filename": filename
+        "type": ftype,
+        "mime": mime if mime else "application/octet-stream"
     }

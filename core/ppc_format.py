@@ -1,12 +1,13 @@
 # core/ppc_format.py
 import cbor2
 from typing import Dict, Any
+import struct
 import json
 
 PPC_MAGIC = b"PPCv2"
 
 class PPCFile:
-    def __init__(self, original_data: bytes, metadata: Dict[str, Any]):
+    def __init__(self, original_data: bytes, metedata: Dict[str, Any]):
         self.original_data = original_data
         self.metadata = metadata
 
@@ -26,11 +27,12 @@ class PPCFile:
         })
 
     @staticmethod
-    def unpack(data: bytes) -> Dict[str, Any]:
-        try:
-            decoded = cbor2.loads(data)
-            if decoded["header"]["magic_number"] != "PPCv2":
-                raise ValueError("Not a valid .ppc file")
-            return decoded
-        except Exception as e:
-            raise ValueError(f"Invalid PPC file: {e}")
+    def unpack(data: bytes) -> dict:
+        header_len = struct.unpack('<I', data[:4])[0]
+        header = json.loads(data[4:4+header_len].decode('utf-8'))  # Only header!
+        payload = data[4+header_len:]  # This is raw bytes, do NOT decode
+        return {"header": header, "data": payload}
+
+# with open(ppc_path, "rb") as f:
+#     raw_ppc_data = f.read()
+# print("DEBUG first 16 bytes:", raw_ppc_data[:16])

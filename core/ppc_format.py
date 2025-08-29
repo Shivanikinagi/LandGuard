@@ -28,11 +28,5 @@ class PPCFile:
 
     @staticmethod
     def unpack(data: bytes) -> dict:
-        header_len = struct.unpack('<I', data[:4])[0]
-        header = json.loads(data[4:4+header_len].decode('utf-8'))  # Only header!
-        payload = data[4+header_len:]  # This is raw bytes, do NOT decode
-        return {"header": header, "data": payload}
-
-# with open(ppc_path, "rb") as f:
-#     raw_ppc_data = f.read()
-# print("DEBUG first 16 bytes:", raw_ppc_data[:16])
+        obj = cbor2.loads(data)
+        return {"header": obj["header"], "data": obj["payload"]}

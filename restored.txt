@@ -1,1 +1,129 @@
 Hello, Pied Piper 2.0!
+Calling WordPress REST APIs in Python
+In this section, we’ll go beyond Postman and learn how to call REST APIs programmatically using Python.
+We’ll also talk about how to do it efficiently, keeping time and space complexity in mind, and following standard practices.
+We’ll use Python’s requests library for all examples. Make sure you have it installed:
+pip install requests
+WordPress REST API base URL is:
+https://your-site.com/wp-json/wp/v2/
+and that you have your WordPress admin username and password.
+
+Making API Calls: The Basics
+Whenever we call an API, what we’re really doing is sending an HTTP request (like GET, POST, PATCH, DELETE) and waiting for the server’s response.
+In Python, this is simple with the requests library. Let’s walk through CRUD operations step by step.
+
+Reading Posts (GET)
+We can start with a GET request to fetch posts.
+This is the simplest type of request — we’re just retrieving data from the server.
+import requests
+
+URL = "https://your-site.com/wp-json/wp/v2/posts"
+
+response = requests.get(URL)
+print(response.status_code)
+print(response.json())
+Here, the request is constructed and sent in constant time, so the time complexity is essentially O(1) on the client side, while parsing the JSON response is O(n), where n is the size of the response.
+Space complexity is also proportional to the size of the response (O(n)).
+
+Creating a Post (POST)
+To create a post, we’ll use a POST request and send some JSON data along with authentication credentials.
+from requests.auth import HTTPBasicAuth
+import requests
+
+URL = "https://your-site.com/wp-json/wp/v2/posts"
+auth = HTTPBasicAuth("your_username", "your_password")
+
+payload = {
+    "title": "Post from Python",
+    "content": "This was created via REST API using Python!",
+    "status": "publish"
+}
+
+response = requests.post(URL, auth=auth, json=payload)
+print(response.status_code)
+print(response.json())
+
+Updating a Post (PATCH)
+We can modify an existing post by sending a PATCH request to its specific endpoint.
+POST_ID = 123  # replace with your post ID
+URL = f"https://your-site.com/wp-json/wp/v2/posts/{POST_ID}"
+
+payload = {
+    "title": "Updated Title via Python"
+}
+
+response = requests.patch(URL, auth=auth, json=payload)
+print(response.status_code)
+print(response.json())
+
+Deleting a Post (DELETE)
+Finally, we can delete a post by sending a DELETE request. If we want to permanently delete it, we can include force=true as a query parameter.
+POST_ID = 123  # replace with your post ID
+URL = f"https://your-site.com/wp-json/wp/v2/posts/{POST_ID}?force=true"
+
+response = requests.delete(URL, auth=auth)
+print(response.status_code)
+print(response.json())
+
+How to Run These Scripts
+We can save any of the snippets above in a .py file, for example create_post.py, and run it from the terminal:
+python3 create_post.py
+We just need to replace your_username, your_password, and POST_ID with actual values before running.
+
+Improving Efficiency
+Now that we know how to make basic calls, it’s worth thinking about how to make these calls more efficient.
+Even though our code itself is not computationally expensive, making HTTP calls can be slow if we’re not careful.
+Here are some ways we can reduce both the time it takes and the memory used.
+
+Use a Session for Multiple Requests
+When making multiple API calls, creating a new TCP connection each time is inefficient. We can reuse connections with requests.Session().
+from requests.auth import HTTPBasicAuth
+import requests
+
+session = requests.Session()
+session.auth = HTTPBasicAuth("your_username", "your_password")
+
+response = session.get("https://your-site.com/wp-json/wp/v2/posts")
+print(response.json())
+This is the recommended approach if we’re making more than one request, because it avoids the overhead of setting up and tearing down a new connection for every request.
+
+Limit the Response Data
+If we don’t need all the fields of a resource, we can ask the API to return only specific fields. This reduces both bandwidth and memory usage.
+For example, instead of retrieving full posts, we can do:
+https://your-site.com/wp-json/wp/v2/posts?_fields=id,title
+This can make a big difference if the server supports it.
+
+Use Pagination
+Many APIs return only a limited number of results per page, but even if they don’t, it’s a good practice to explicitly page through results rather than asking for everything at once.
+For example:
+https://your-site.com/wp-json/wp/v2/posts?page=2
+This helps avoid loading too much data into memory and prevents overwhelming the server.
+
+Standard Practices When Calling APIs
+There are a few conventions we should always keep in mind when working with APIs:
+
+Use the correct HTTP method: GET for reads, POST for creates, PATCH/PUT for updates, DELETE for deletes.
+Always check the status code in the response to handle errors properly.
+Authenticate where necessary, using a secure mechanism.
+Avoid making unnecessary calls — cache results if they don’t change often.
+Respect the server’s rate limits to avoid being blocked.
+Keep your requests and responses small by limiting the data you ask for.
+
+@AIPI25JUN01 @AIPI25MAY03 @AIPI25JUN03
+@sneha
+
+ 
+    Developer
+  
+
+@sneha
+WordPress REST API with Python — Summary Guide
+This guide covers how to perform CRUD operations using the WordPress REST API with Python's requests library.
+
+Google Colab Notebook
+Open the Colab Notebook
+
+CRUD Operations in Python
+Screenshot (GET Request):
+
+

@@ -7,7 +7,7 @@ import json
 PPC_MAGIC = b"PPCv2"
 
 class PPCFile:
-    def __init__(self, original_data: bytes, metedata: Dict[str, Any]):
+    def __init__(self, original_data: bytes, metadata: Dict[str, Any]):
         self.original_data = original_data
         self.metadata = metadata
 
@@ -28,5 +28,7 @@ class PPCFile:
 
     @staticmethod
     def unpack(data: bytes) -> dict:
-        obj = cbor2.loads(data)
-        return {"header": obj["header"], "data": obj["payload"]}
+        header_len = struct.unpack('<I', data[:4])[0]
+        header = json.loads(data[4:4+header_len].decode('utf-8'))
+        payload = data[4+header_len:]
+        return {"header": header, "data": payload}

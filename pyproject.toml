@@ -1,0 +1,10 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="pcc",
+    version="0.1.0",
+    description="AI-powered universal compression & decentralized storage",
+    author="Parth KK, Ansh G. & Neel S.",
+    packages=["pcc"],
+    python_requires=">=3.8",
+)

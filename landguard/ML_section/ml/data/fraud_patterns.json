@@ -1,0 +1,134 @@
+{
+  "patterns": {
+    "price_patterns": [
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.98,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.02,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.95,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.05,
+        "threshold": 0.5
+      }
+    ],
+    "document_patterns": [
+      {
+        "type": "frequently_missing_document",
+        "document": "sale_deed",
+        "frequency": 1.0,
+        "missing_count": 2
+      },
+      {
+        "type": "frequently_missing_document",
+        "document": "title_deed",
+        "frequency": 1.0,
+        "missing_count": 2
+      },
+      {
+        "type": "frequently_missing_document",
+        "document": "encumbrance_certificate",
+        "frequency": 1.0,
+        "missing_count": 2
+      },
+      {
+        "type": "frequently_missing_document",
+        "document": "tax_receipt",
+        "frequency": 1.0,
+        "missing_count": 2
+      },
+      {
+        "type": "frequently_missing_document",
+        "document": "survey_map",
+        "frequency": 1.0,
+        "missing_count": 2
+      }
+    ],
+    "temporal_patterns": [
+      {
+        "type": "high_fraud_month",
+        "month": 12,
+        "frequency": 0.5
+      },
+      {
+        "type": "high_fraud_month",
+        "month": 7,
+        "frequency": 0.5
+      }
+    ],
+    "owner_patterns": [
+      {
+        "type": "seller_buyer_same_name",
+        "frequency": 1.0
+      },
+      {
+        "type": "unusually_short_names",
+        "frequency": 0.5
+      }
+    ],
+    "combined_patterns": []
+  },
+  "fraud_signatures": [
+    {
+      "name": "low_value_suspicious",
+      "conditions": [
+        "price < market_value * 0.5",
+        "missing_critical_docs >= 2",
+        "area < 100"
+      ],
+      "severity": "high",
+      "confidence": 0.85
+    },
+    {
+      "name": "document_fraud",
+      "conditions": [
+        "missing_sale_deed OR missing_title_deed",
+        "underpaid_stamp_duty",
+        "num_documents < 2"
+      ],
+      "severity": "high",
+      "confidence": 0.8
+    },
+    {
+      "name": "identity_fraud",
+      "conditions": [
+        "seller_buyer_same_name",
+        "owner_name_too_short",
+        "has_numbers_in_name OR has_special_chars"
+      ],
+      "severity": "medium",
+      "confidence": 0.7
+    },
+    {
+      "name": "price_manipulation",
+      "conditions": [
+        "price_deviation_ratio > 0.5",
+        "is_round_price",
+        "underpaid_stamp_duty"
+      ],
+      "severity": "high",
+      "confidence": 0.75
+    },
+    {
+      "name": "gift_deed_fraud",
+      "conditions": [
+        "transaction_type == gift",
+        "price_below_market",
+        "missing_critical_docs >= 1"
+      ],
+      "severity": "medium",
+      "confidence": 0.65
+    }
+  ],
+  "is_trained": true
+}

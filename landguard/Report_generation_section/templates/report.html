@@ -1,0 +1,227 @@
+{% block content %}
+
+<div class="row mb-4">
+  <div class="col-md-8">
+    <h2>Land Summary – {{ report.summary.land_id }}</h2>
+    <p>
+      <strong>Owner:</strong> {{ report.summary.owner_name }}<br />
+      <strong>Location:</strong> {{ report.summary.location }}<br />
+      <strong>Risk Score:</strong>
+      <span class="badge
+        {% if report.summary.risk_score >= 75 %} bg-danger
+        {% elif report.summary.risk_score >= 50 %} bg-warning
+        {% else %} bg-success
+        {% endif %}
+      ">
+        {{ "%.1f"|format(report.summary.risk_score) }}/100
+      </span>
+    </p>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title">Quick Stats</h6>
+        <ul class="list-unstyled mb-0">
+          <li>Total Rules: <strong>{{ report.summary.total_rules }}</strong></li>
+          <li>Triggered Rules: <strong>{{ report.summary.triggered_rule_count }}</strong></li>
+          <li>Anomalies Detected: <strong>{{ report.summary.anomaly_count }}</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+  <div class="col-md-6 mb-3">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title">Rule Hit Counts</h6>
+        <canvas id="ruleHitsChart"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 mb-3">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title">Anomaly Severity Distribution</h6>
+        <canvas id="severityChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Timeline -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title">Transaction Timeline</h6>
+        <canvas id="timelineChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Anomalies Table -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title">Detected Anomalies</h6>
+        {% if report.anomalies %}
+          <div class="table-responsive">
+            <table class="table table-sm table-striped">
+              <thead>
+                <tr>
+                  <th>Rule</th>
+                  <th>Severity</th>
+                  <th>Description</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for a in report.anomalies %}
+                <tr>
+                  <td>{{ a.rule_name or a.rule_id }}</td>
+                  <td>{{ a.severity|upper }}</td>
+                  <td>{{ a.description }}</td>
+                  <td>{{ a.timestamp or "-" }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-muted mb-0">No anomalies detected.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rules Table -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title">Rule Evaluation Overview</h6>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover">
+            <thead>
+              <tr>
+                <th>Rule ID</th>
+                <th>Name</th>
+                <th>Severity</th>
+                <th>Triggered</th>
+                <th>Hit Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in report.rules %}
+              <tr>
+                <td>{{ r.id }}</td>
+                <td>{{ r.name }}</td>
+                <td>{{ r.severity|capitalize }}</td>
+                <td>
+                  {% if r.triggered %}
+                    <span class="badge bg-danger">Yes</span>
+                  {% else %}
+                    <span class="badge bg-success">No</span>
+                  {% endif %}
+                </td>
+                <td>{{ r.hit_count or (1 if r.triggered else 0) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Chart data passed from backend
+//   const ruleHitLabels = {{ report.charts.rule_hit_counts.labels | tojson | safe }};
+//   const ruleHitValues = {{ report.charts.rule_hit_counts.values | tojson | safe }};
+
+//   const severityLabels = {{ report.charts.severity_distribution.labels | tojson | safe }};
+//   const severityValues = {{ report.charts.severity_distribution.values | tojson | safe }};
+
+//   const timelineDates = {{ report.charts.timeline.dates | tojson | safe }};
+//   const timelineValues = {{ report.charts.timeline.values | tojson | safe }};
+
+  // Rule hits bar chart
+  new Chart(
+    document.getElementById("ruleHitsChart"),
+    {
+      type: "bar",
+      data: {
+        labels: ruleHitLabels,
+        datasets: [{
+          label: "Hit Count",
+          data: ruleHitValues,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+        }
+      }
+    }
+  );
+
+  // Severity pie chart
+  new Chart(
+    document.getElementById("severityChart"),
+    {
+      type: "pie",
+      data: {
+        labels: severityLabels,
+        datasets: [{
+          data: severityValues,
+        }]
+      },
+      options: {
+        responsive: true,
+      }
+    }
+  );
+
+  // Timeline line chart
+  new Chart(
+    document.getElementById("timelineChart"),
+    {
+      type: "line",
+      data: {
+        labels: timelineDates,
+        datasets: [{
+          label: "Transaction Amount",
+          data: timelineValues,
+          tension: 0.3,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            title: {
+              display: true,
+              text: "Amount"
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: "Date"
+            }
+          }
+        }
+      }
+    }
+  );
+</script>
+
+{% endblock %}

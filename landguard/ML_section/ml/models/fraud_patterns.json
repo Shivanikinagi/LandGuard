@@ -1,0 +1,409 @@
+{
+  "patterns": {
+    "price_patterns": [
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9037239199984686,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.09627608000153146,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9199389262438855,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.0800610737561145,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.8807649849878356,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.11923501501216437,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9181491752611686,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.08185082473883137,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9696517736754479,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.030348226324552172,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9622040163957728,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.03779598360422719,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9715487667902236,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.028451233209776414,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9639892111248457,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.03601078887515427,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9470380590540206,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.052961940945979384,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.8654520767294513,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.13454792327054862,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.8871942713422608,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.11280572865773919,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9467794263746169,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.053220573625383134,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9272700357907295,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.0727299642092705,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9705958946940311,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.029404105305968913,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.978701991269383,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.02129800873061701,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9463107459162553,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.053689254083744704,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9169043007784717,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.08309569922152829,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9414956875427011,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.0585043124572989,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9263596427434583,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.07364035725654175,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9700762474275885,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.02992375257241156,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9841612942523024,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.01583870574769761,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.858891588140523,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.141108411859477,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9635030212681712,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.03649697873182882,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.97872470199623,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.021275298003770073,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9805794387841367,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.019420561215863334,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.977537545454074,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.02246245454592595,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.888277544348255,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.11172245565174505,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9534371037144121,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.046562896285587796,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.8845897912969632,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.11541020870303673,
+        "threshold": 0.5
+      },
+      {
+        "type": "large_price_deviation",
+        "deviation_ratio": 0.9679513308686772,
+        "threshold": 0.5
+      },
+      {
+        "type": "suspiciously_low_price",
+        "price_ratio": 0.03204866913132277,
+        "threshold": 0.5
+      }
+    ],
+    "document_patterns": [
+      {
+        "type": "frequently_missing_document",
+        "document": "sale_deed",
+        "frequency": 1.0,
+        "missing_count": 30
+      },
+      {
+        "type": "frequently_missing_document",
+        "document": "title_deed",
+        "frequency": 1.0,
+        "missing_count": 30
+      },
+      {
+        "type": "frequently_missing_document",
+        "document": "encumbrance_certificate",
+        "frequency": 1.0,
+        "missing_count": 30
+      },
+      {
+        "type": "frequently_missing_document",
+        "document": "tax_receipt",
+        "frequency": 1.0,
+        "missing_count": 30
+      },
+      {
+        "type": "frequently_missing_document",
+        "document": "survey_map",
+        "frequency": 1.0,
+        "missing_count": 30
+      }
+    ],
+    "temporal_patterns": [
+      {
+        "type": "high_fraud_month",
+        "month": 12,
+        "frequency": 1.0
+      }
+    ],
+    "owner_patterns": [
+      {
+        "type": "seller_buyer_same_name",
+        "frequency": 1.0
+      },
+      {
+        "type": "unusually_short_names",
+        "frequency": 0.3333333333333333
+      }
+    ],
+    "combined_patterns": []
+  },
+  "fraud_signatures": [
+    {
+      "name": "low_value_suspicious",
+      "conditions": [
+        "price < market_value * 0.5",
+        "missing_critical_docs >= 2",
+        "area < 100"
+      ],
+      "severity": "high",
+      "confidence": 0.85
+    },
+    {
+      "name": "document_fraud",
+      "conditions": [
+        "missing_sale_deed OR missing_title_deed",
+        "underpaid_stamp_duty",
+        "num_documents < 2"
+      ],
+      "severity": "high",
+      "confidence": 0.8
+    },
+    {
+      "name": "identity_fraud",
+      "conditions": [
+        "seller_buyer_same_name",
+        "owner_name_too_short",
+        "has_numbers_in_name OR has_special_chars"
+      ],
+      "severity": "medium",
+      "confidence": 0.7
+    },
+    {
+      "name": "price_manipulation",
+      "conditions": [
+        "price_deviation_ratio > 0.5",
+        "is_round_price",
+        "underpaid_stamp_duty"
+      ],
+      "severity": "high",
+      "confidence": 0.75
+    },
+    {
+      "name": "gift_deed_fraud",
+      "conditions": [
+        "transaction_type == gift",
+        "price_below_market",
+        "missing_critical_docs >= 1"
+      ],
+      "severity": "medium",
+      "confidence": 0.65
+    }
+  ],
+  "is_trained": true
+}

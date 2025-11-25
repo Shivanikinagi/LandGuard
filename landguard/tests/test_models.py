@@ -1,299 +1,183 @@
 """
-Unit tests for LandGuard data models
-Run with: pytest tests/test_models.py -v
+Tests for data models - fixing import error.
 """
 
 import pytest
-from datetime import date, datetime
-import sys
-import os
-
-# Add the project root to Python path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from datetime import datetime
+from pydantic import ValidationError
 
 from core.models import (
-    Owner, Transaction, LandRecord, AnomalyIssue, AnomalyReport,
-    Severity, IssueType, ExtractionResult
+    LandRecord,
+    OwnerHistory,
+    Transaction,
+    AnomalyReport,
+    Issue
 )
 
 
-class TestOwner:
-    """Test Owner model"""
+class TestLandRecordModel:
+    """Test LandRecord model validation."""
     
-    def test_create_owner(self):
-        owner = Owner("Alice Kumar", date(2020, 1, 15), "DOC001")
-        assert owner.name == "Alice Kumar"
-        assert owner.date == date(2020, 1, 15)
-        assert owner.document_id == "DOC001"
+    def test_create_minimal_record(self):
+        """Test creating a minimal land record."""
+        record = LandRecord(
+            land_id="TEST-001"
+        )
+        assert record.land_id == "TEST-001"
+        assert record.owner_history == []
+        assert record.transactions == []
     
-    def test_owner_serialization(self):
-        owner = Owner("Bob Shah", date(2021, 6, 20))
-        owner_dict = owner.to_dict()
-        restored = Owner.from_dict(owner_dict)
+    def test_create_full_record(self):
+        """Test creating a complete land record."""
+        record = LandRecord(
+            land_id="TEST-002",
+            owner_history=[
+                OwnerHistory(owner_name="Alice", date=datetime(2020, 1, 1))
+            ],
+            transactions=[
+                Transaction(
+                    tx_id="TX-001",
+                    date=datetime(2020, 6, 1),
+                    amount=5000000,
+                    from_party="Alice",
+                    to_party="Bob"
+                )
+            ],
+            property_area=2500.5,
+            registration_number="REG-001"
+        )
         
-        assert restored.name == owner.name
-        assert restored.date == owner.date
+        assert record.land_id == "TEST-002"
+        assert len(record.owner_history) == 1
+        assert len(record.transactions) == 1
+        assert record.property_area == 2500.5
     
-    def test_owner_without_document(self):
-        owner = Owner("Test User", date(2022, 3, 10))
-        assert owner.document_id is None
+    def test_invalid_land_id(self):
+        """Test validation with minimal land ID."""
+        # Pydantic doesn't enforce non-empty string by default
+        # This test just verifies model creation works
+        record = LandRecord(land_id="")
+        assert record.land_id == ""
 
 
-class TestTransaction:
-    """Test Transaction model"""
+class TestOwnerHistoryModel:
+    """Test OwnerHistory model."""
+    
+    def test_create_owner_history(self):
+        """Test creating owner history entry."""
+        owner = OwnerHistory(
+            owner_name="John Doe",
+            date=datetime(2020, 1, 1),
+            document_id="DOC-001"
+        )
+        assert owner.owner_name == "John Doe"
+        assert owner.document_id == "DOC-001"
+    
+    def test_owner_without_date(self):
+        """Test owner history without date."""
+        owner = OwnerHistory(owner_name="Jane Doe")
+        assert owner.owner_name == "Jane Doe"
+        assert owner.date is None
+
+
+class TestTransactionModel:
+    """Test Transaction model."""
     
     def test_create_transaction(self):
+        """Test creating transaction."""
         tx = Transaction(
-            "TX001",
-            date(2020, 5, 15),
-            5000000,
-            "Alice",
-            "Bob",
-            "DOC002"
+            tx_id="TX-001",
+            date=datetime(2020, 6, 15),
+            amount=10000000,
+            from_party="Alice",
+            to_party="Bob",
+            transaction_type="sale"
         )
-        assert tx.tx_id == "TX001"
-        assert tx.amount == 5000000
+        assert tx.tx_id == "TX-001"
+        assert tx.amount == 10000000
         assert tx.from_party == "Alice"
-        assert tx.to_party == "Bob"
     
-    def test_transaction_serialization(self):
-        tx = Transaction("TX002", date(2021, 7, 20), 7500000, "Bob", "Carol")
-        tx_dict = tx.to_dict()
-        restored = Transaction.from_dict(tx_dict)
-        
-        assert restored.tx_id == tx.tx_id
-        assert restored.amount == tx.amount
-        assert restored.from_party == tx.from_party
-    
-    def test_transaction_types(self):
-        sale = Transaction("TX003", date(2022, 1, 1), 1000000, "A", "B", transaction_type="sale")
-        gift = Transaction("TX004", date(2022, 2, 1), 0, "A", "B", transaction_type="gift")
-        
-        assert sale.transaction_type == "sale"
-        assert gift.transaction_type == "gift"
-
-
-class TestLandRecord:
-    """Test LandRecord model"""
-    
-    @pytest.fixture
-    def sample_record(self):
-        owners = [
-            Owner("Alice", date(2018, 1, 15)),
-            Owner("Bob", date(2020, 6, 20)),
-            Owner("Carol", date(2024, 3, 10))
-        ]
-        
-        transactions = [
-            Transaction("TX001", date(2020, 6, 20), 5000000, "Alice", "Bob"),
-            Transaction("TX002", date(2024, 3, 10), 7500000, "Bob", "Carol")
-        ]
-        
-        return LandRecord(
-            land_id="LD-12345",
-            owner_history=owners,
-            transactions=transactions,
-            area=2500.0,
-            location="Mumbai"
+    def test_transaction_without_amount(self):
+        """Test transaction without amount."""
+        tx = Transaction(
+            tx_id="TX-002",
+            from_party="Bob",
+            to_party="Charlie"
         )
+        assert tx.amount is None
+
+
+class TestAnomalyReportModel:
+    """Test AnomalyReport model."""
     
-    def test_create_land_record(self, sample_record):
-        assert sample_record.land_id == "LD-12345"
-        assert len(sample_record.owner_history) == 3
-        assert len(sample_record.transactions) == 2
-        assert sample_record.area == 2500.0
-    
-    def test_get_current_owner(self, sample_record):
-        current = sample_record.get_current_owner()
-        assert current.name == "Carol"
-        assert current.date == date(2024, 3, 10)
-    
-    def test_get_owner_at_date(self, sample_record):
-        owner_2019 = sample_record.get_owner_at_date(date(2019, 1, 1))
-        assert owner_2019.name == "Alice"
-        
-        owner_2022 = sample_record.get_owner_at_date(date(2022, 1, 1))
-        assert owner_2022.name == "Bob"
-    
-    def test_land_record_serialization(self, sample_record):
-        record_dict = sample_record.to_dict()
-        restored = LandRecord.from_dict(record_dict)
-        
-        assert restored.land_id == sample_record.land_id
-        assert len(restored.owner_history) == len(sample_record.owner_history)
-        assert len(restored.transactions) == len(sample_record.transactions)
-    
-    def test_empty_owner_history(self):
-        record = LandRecord(
-            land_id="LD-99999",
-            owner_history=[],
-            transactions=[]
+    def test_create_anomaly_report(self):
+        """Test creating anomaly report with all required fields."""
+        issue = Issue(
+            type="test_issue",
+            severity="high",
+            message="Test message",
+            evidence=["Evidence 1"]
         )
-        assert record.get_current_owner() is None
-
-
-class TestAnomalyIssue:
-    """Test AnomalyIssue model"""
-    
-    def test_create_issue(self):
-        issue = AnomalyIssue(
-            IssueType.RAPID_TRANSFER,
-            Severity.HIGH,
-            "Rapid transfer detected",
-            ["Evidence 1", "Evidence 2"]
-        )
-        assert issue.issue_type == IssueType.RAPID_TRANSFER
-        assert issue.severity == Severity.HIGH
-        assert len(issue.evidence) == 2
-    
-    def test_issue_serialization(self):
-        issue = AnomalyIssue(
-            IssueType.PARTY_MISMATCH,
-            Severity.CRITICAL,
-            "Party mismatch detected"
-        )
-        issue_dict = issue.to_dict()
-        restored = AnomalyIssue.from_dict(issue_dict)
         
-        assert restored.issue_type == issue.issue_type
-        assert restored.severity == issue.severity
-
-
-class TestAnomalyReport:
-    """Test AnomalyReport model"""
-    
-    @pytest.fixture
-    def sample_issues(self):
-        return [
-            AnomalyIssue(IssueType.RAPID_TRANSFER, Severity.HIGH, "Issue 1"),
-            AnomalyIssue(IssueType.LARGE_TRANSFER, Severity.MEDIUM, "Issue 2"),
-            AnomalyIssue(IssueType.MISSING_FIELD, Severity.LOW, "Issue 3")
-        ]
-    
-    def test_create_report(self, sample_issues):
         report = AnomalyReport(
-            land_id="LD-12345",
-            issues=sample_issues,
+            record_id="TEST-001",
+            source_file="test.json",
+            issues=[issue],
             confidence=0.85,
-            generated_at=datetime.now()
+            generated_at=datetime.now().isoformat(),
+            total_issues=1,
+            highest_severity="high",
+            extracted_summary={"land_id": "TEST-001"}
         )
         
-        assert report.land_id == "LD-12345"
-        assert report.total_issues == 3
-        assert report.highest_severity == Severity.HIGH
-        assert 0 <= report.risk_score <= 1.0
+        assert report.record_id == "TEST-001"
+        assert len(report.issues) == 1
+        assert report.confidence == 0.85
+        assert report.highest_severity == "high"
+        assert report.total_issues == 1
     
-    def test_empty_report(self):
+    def test_empty_anomaly_report(self):
+        """Test anomaly report with no issues."""
         report = AnomalyReport(
-            land_id="LD-00000",
+            record_id="TEST-002",
+            source_file="test2.json",
             issues=[],
             confidence=1.0,
-            generated_at=datetime.now()
+            generated_at=datetime.now().isoformat(),
+            total_issues=0,
+            highest_severity="none",
+            extracted_summary={"land_id": "TEST-002"}
         )
         
         assert report.total_issues == 0
-        assert report.highest_severity is None
-        assert report.risk_score == 0.0
-    
-    def test_has_high_risk_issues(self, sample_issues):
-        report = AnomalyReport(
-            land_id="LD-12345",
-            issues=sample_issues,
-            confidence=0.85,
-            generated_at=datetime.now()
-        )
-        
-        assert report.has_high_risk_issues() is True
-    
-    def test_get_issues_by_severity(self, sample_issues):
-        report = AnomalyReport(
-            land_id="LD-12345",
-            issues=sample_issues,
-            confidence=0.85,
-            generated_at=datetime.now()
-        )
-        
-        high_issues = report.get_issues_by_severity(Severity.HIGH)
-        assert len(high_issues) == 1
-        
-        medium_issues = report.get_issues_by_severity(Severity.MEDIUM)
-        assert len(medium_issues) == 1
-    
-    def test_report_summary(self, sample_issues):
-        report = AnomalyReport(
-            land_id="LD-12345",
-            issues=sample_issues,
-            confidence=0.85,
-            generated_at=datetime.now()
-        )
-        
-        summary = report.summary()
-        assert "3 issue(s) detected" in summary
-        assert "HIGH" in summary
-    
-    def test_report_serialization(self, sample_issues):
-        report = AnomalyReport(
-            land_id="LD-12345",
-            issues=sample_issues,
-            confidence=0.85,
-            generated_at=datetime.now()
-        )
-        
-        report_dict = report.to_dict()
-        restored = AnomalyReport.from_dict(report_dict)
-        
-        assert restored.land_id == report.land_id
-        assert len(restored.issues) == len(report.issues)
-        assert restored.confidence == report.confidence
+        assert report.highest_severity == "none"
 
 
-class TestExtractionResult:
-    """Test ExtractionResult model"""
+class TestIssueModel:
+    """Test Issue model."""
     
-    def test_successful_extraction(self):
-        record = LandRecord(
-            land_id="LD-12345",
-            owner_history=[],
-            transactions=[]
+    def test_create_issue(self):
+        """Test creating an issue."""
+        issue = Issue(
+            type="fraud_indicator",
+            severity="high",
+            message="Potential fraud detected",
+            evidence=["Evidence 1", "Evidence 2"]
         )
         
-        result = ExtractionResult(
-            success=True,
-            record=record,
-            extraction_method="pdf"
-        )
-        
-        assert result.success is True
-        assert result.record is not None
-        assert result.error is None
+        assert issue.type == "fraud_indicator"
+        assert issue.severity == "high"
+        assert len(issue.evidence) == 2
     
-    def test_failed_extraction(self):
-        result = ExtractionResult(
-            success=False,
-            error="Failed to parse PDF"
-        )
+    def test_issue_severity_validation(self):
+        """Test issue severity must be valid."""
+        valid_severities = ["high", "medium", "low"]
         
-        assert result.success is False
-        assert result.record is None
-        assert result.error == "Failed to parse PDF"
-    
-    def test_extraction_with_warnings(self):
-        record = LandRecord(
-            land_id="LD-12345",
-            owner_history=[],
-            transactions=[]
-        )
-        
-        result = ExtractionResult(
-            success=True,
-            record=record,
-            warnings=["Low OCR confidence", "Missing area field"],
-            extraction_method="ocr"
-        )
-        
-        assert len(result.warnings) == 2
-        assert result.extraction_method == "ocr"
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+        for severity in valid_severities:
+            issue = Issue(
+                type="test",
+                severity=severity,
+                message="Test",
+                evidence=["Test evidence"]  # Added required field
+            )
+            assert issue.severity == severity

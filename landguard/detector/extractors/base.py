@@ -1,5 +1,5 @@
 """
-Base extractor interface.
+Base extractor interface for all file type extractors.
 """
 
 from abc import ABC, abstractmethod

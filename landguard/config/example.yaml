@@ -1,0 +1,82 @@
+# LandGuard Example Configuration
+# Copy this file and customize for your needs
+
+# ============================================
+# Fraud Detection Settings
+# ============================================
+
+# Detect transfers happening within 90 days
+rapid_transfer_days: 90
+
+# Flag if 3 or more transfers in the period
+rapid_transfer_count: 3
+
+# Flag transactions over 50 million
+large_transfer_threshold: 50000000
+
+# Name matching threshold (80% similarity)
+name_similarity_threshold: 80
+
+# Allow 2 days tolerance for date conflicts
+date_order_tolerance_days: 2
+
+# ============================================
+# Feature Flags - Customize Detection Rules
+# ============================================
+
+enable_rapid_transfer_detection: true
+enable_large_transfer_detection: true
+enable_party_mismatch_detection: true
+enable_time_order_detection: false  # Disabled for this example
+enable_missing_field_detection: true
+enable_duplicate_detection: true
+
+# ============================================
+# Output Settings
+# ============================================
+
+# Use DEBUG for development, INFO for production
+log_level: DEBUG
+
+# Output format: json, text, or csv
+output_format: text
+
+# Show detailed evidence in output
+enable_verbose: true
+
+# ============================================
+# Report Configuration
+# ============================================
+
+include_evidence: true
+include_confidence_scores: true
+group_issues_by_severity: true
+
+# ============================================
+# Performance Tuning
+# ============================================
+
+# Process 50 records at a time
+batch_size: 50
+
+# Use 8 worker threads for parallel processing
+max_workers: 8
+
+# Enable caching for repeated analyses
+cache_enabled: true
+
+# ============================================
+# File Processing Limits
+# ============================================
+
+# Maximum file size: 100 MB
+max_file_size_mb: 100
+
+# Supported formats
+supported_formats:
+  - json
+  - csv
+  - pdf
+  - jpg
+  - png
+  - tiff

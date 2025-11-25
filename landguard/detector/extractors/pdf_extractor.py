@@ -3,7 +3,7 @@ PDF file extractor for land records.
 """
 
 import re
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from pathlib import Path
 
 try:
@@ -61,7 +61,7 @@ class PDFExtractor(BaseExtractor):
             except Exception as e:
                 print(f"PyPDF2 failed: {e}")
         
-        raise ValueError("No PDF extraction library available")
+        raise ValueError("No PDF extraction library available. Install pdfminer.six or PyPDF2")
     
     def _parse_text(self, text: str) -> Dict[str, Any]:
         """Parse extracted text to find land record fields."""
@@ -130,7 +130,7 @@ class PDFExtractor(BaseExtractor):
         
         return transactions
     
-    def _extract_property_area(self, text: str) -> float | None:
+    def _extract_property_area(self, text: str) -> Optional[float]:
         """Extract property area from text."""
         patterns = [
             r'Area[:\s]+([\d,]+\.?\d*)\s*(?:sq|sqm|m2)',
@@ -142,12 +142,12 @@ class PDFExtractor(BaseExtractor):
             if match:
                 try:
                     return float(match.group(1).replace(',', ''))
-                except:
+                except (ValueError, TypeError):
                     pass
         
         return None
     
-    def _extract_registration_number(self, text: str) -> str | None:
+    def _extract_registration_number(self, text: str) -> Optional[str]:
         """Extract registration number from text."""
         pattern = r'Registration[:\s]+([A-Z0-9-]+)'
         match = re.search(pattern, text, re.IGNORECASE)

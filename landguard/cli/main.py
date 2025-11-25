@@ -28,27 +28,31 @@ console = Console()
 
 @app.command()
 def analyze(
-    file_path: Path = typer.Argument(..., help="Path to land record file"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Output path for report"),
-    config: Optional[Path] = typer.Option(None, "--config", "-c", help="Config file path"),
+    file_path: str = typer.Argument(..., help="Path to land record file"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output path for report"),
+    config: Optional[str] = typer.Option(None, "--config", "-c", help="Config file path"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output")
 ):
     """Analyze a single land record file for fraud indicators."""
     
-    if not file_path.exists():
+    file_path_obj = Path(file_path)
+    
+    if not file_path_obj.exists():
         console.print(f"[red]✗[/red] File not found: {file_path}")
         raise typer.Exit(1)
     
-    console.print(f"\n[cyan]🔍 Analyzing:[/cyan] {file_path.name}")
+    console.print(f"\n[cyan]🔍 Analyzing:[/cyan] {file_path_obj.name}")
     
     analyzer_config = None
-    if config and config.exists():
-        with open(config) as f:
-            import yaml
-            analyzer_config = yaml.safe_load(f)
+    if config:
+        config_path = Path(config)
+        if config_path.exists():
+            with open(config_path) as f:
+                import yaml
+                analyzer_config = yaml.safe_load(f)
     
     try:
-        record = extract_record(file_path)
+        record = extract_record(file_path_obj)
     except Exception as e:
         console.print(f"[red]✗ Extraction failed:[/red] {e}")
         raise typer.Exit(1)
@@ -59,24 +63,27 @@ def analyze(
     display_report(report, verbose=verbose)
     
     if output:
-        save_report(report, output)
-        console.print(f"\n[green]✓[/green] Report saved to: {output}")
+        output_path = Path(output)
+        save_report(report, output_path)
+        console.print(f"\n[green]✓[/green] Report saved to: {output_path}")
 
 
 @app.command()
 def batch(
-    directory: Path = typer.Argument(..., help="Directory containing land record files"),
-    output: Path = typer.Option("batch_report.json", "--output", "-o", help="Output report path"),
+    directory: str = typer.Argument(..., help="Directory containing land record files"),
+    output: str = typer.Option("batch_report.json", "--output", "-o", help="Output report path"),
     pattern: str = typer.Option("*.json", "--pattern", "-p", help="File pattern to match"),
-    config: Optional[Path] = typer.Option(None, "--config", "-c", help="Config file path")
+    config: Optional[str] = typer.Option(None, "--config", "-c", help="Config file path")
 ):
     """Analyze multiple land record files in batch mode."""
     
-    if not directory.exists() or not directory.is_dir():
+    directory_obj = Path(directory)
+    
+    if not directory_obj.exists() or not directory_obj.is_dir():
         console.print(f"[red]✗[/red] Directory not found: {directory}")
         raise typer.Exit(1)
     
-    files = list(directory.glob(pattern))
+    files = list(directory_obj.glob(pattern))
     
     if not files:
         console.print(f"[yellow]⚠[/yellow] No files found matching pattern: {pattern}")
@@ -85,13 +92,15 @@ def batch(
     console.print(f"\n[cyan]📂 Found {len(files)} file(s) to analyze[/cyan]\n")
     
     analyzer_config = None
-    if config and config.exists():
-        with open(config) as f:
-            import yaml
-            analyzer_config = yaml.safe_load(f)
+    if config:
+        config_path = Path(config)
+        if config_path.exists():
+            with open(config_path) as f:
+                import yaml
+                analyzer_config = yaml.safe_load(f)
     
     records = []
-    with console.status("[bold cyan]Extracting records...") as status:
+    with console.status("[bold cyan]Extracting records..."):
         for file_path in files:
             try:
                 record = extract_record(file_path)
@@ -106,15 +115,17 @@ def batch(
     
     console.print(f"\n[cyan]🔍 Running fraud detection on {len(records)} records...[/cyan]\n")
     analyzer = LandGuardAnalyzer(config=analyzer_config)
-    reports = analyzer.batch_analyze(records, report_path=str(output))
+    
+    output_path = Path(output)
+    reports = analyzer.batch_analyze(records, report_path=str(output_path))
     
     display_batch_summary(reports)
-    console.print(f"\n[green]✓[/green] Batch report saved to: {output}")
+    console.print(f"\n[green]✓[/green] Batch report saved to: {output_path}")
 
 
 @app.command()
 def config_template(
-    output: Path = typer.Option("landguard_config.yaml", "--output", "-o")
+    output: str = typer.Option("landguard_config.yaml", "--output", "-o", help="Output path for config template")
 ):
     """Generate a template configuration file."""
     
@@ -134,10 +145,11 @@ name_similarity_threshold: 85
 date_order_tolerance_days: 1
 """
     
-    with open(output, 'w') as f:
+    output_path = Path(output)
+    with open(output_path, 'w') as f:
         f.write(template)
     
-    console.print(f"[green]✓[/green] Config template saved to: {output}")
+    console.print(f"[green]✓[/green] Config template saved to: {output_path}")
 
 
 def extract_record(file_path: Path) -> LandRecord:

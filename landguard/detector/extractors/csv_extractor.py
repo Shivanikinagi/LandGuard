@@ -3,7 +3,7 @@ CSV file extractor for land records.
 """
 
 import csv
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from pathlib import Path
 from collections import defaultdict
 
@@ -92,11 +92,11 @@ class CSVExtractor(BaseExtractor):
         
         return result
     
-    def _parse_float(self, value: Any) -> float | None:
+    def _parse_float(self, value: Any) -> Optional[float]:
         """Safely parse float value."""
         if not value:
             return None
         try:
             return float(value)
-        except:
+        except (ValueError, TypeError):
             return None

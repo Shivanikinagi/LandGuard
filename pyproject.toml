@@ -1,9 +1,9 @@
-from setuptools import setup, find_packages
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
 
-setup(
-    name="pcc",
-    version="0.1.0",
-    description="AI-powered universal compression & decentralized storage",
-    packages=["pcc"],
-    python_requires=">=3.8",
-)
+[project]
+name = "compression-project"
+version = "0.1.0"
+description = "Compression and LandGuard projects"
+requires-python = ">=3.8"

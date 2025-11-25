@@ -274,7 +274,6 @@ def print_pcc_banner():
             style = style1 if i % 2 == 0 else style2
             console.print(Text(line, style=style))
     console.print(Text("PPC COMPRESSOR", style=Style(color="magenta", bold=True, underline=True)), justify="center")
-    console.print(Text("made by Parth KK, Ansh G. & Neel S.", style=Style(color="white", italic=True, dim=True)), justify="center")
     console.print(Text(">>> Welcome to the PPC CLI <<<", style=Style(color="yellow", bold=True)), justify="center")
     console.print()
 

@@ -1,0 +1,97 @@
+# LandGuard Default Configuration
+# This file contains default settings for fraud detection
+
+# ============================================
+# Fraud Detection Settings
+# ============================================
+
+# Number of days to check for rapid ownership transfers
+# Range: 1 - 3650
+rapid_transfer_days: 180
+
+# Minimum number of transfers to flag as rapid
+# Range: 2 - 100
+rapid_transfer_count: 2
+
+# Threshold amount for large transfer detection (in currency units)
+# Minimum: 0
+large_transfer_threshold: 10000000
+
+# Percentage threshold for name similarity matching (0-100)
+# Range: 0 - 100
+name_similarity_threshold: 85
+
+# Days tolerance for date order conflicts
+# Range: 0 - 365
+date_order_tolerance_days: 1
+
+# ============================================
+# Feature Flags
+# ============================================
+
+# Enable/disable specific detection rules
+enable_rapid_transfer_detection: true
+enable_large_transfer_detection: true
+enable_party_mismatch_detection: true
+enable_time_order_detection: true
+enable_missing_field_detection: true
+enable_duplicate_detection: true
+
+# ============================================
+# Output Settings
+# ============================================
+
+# Logging level
+# Choices: DEBUG, INFO, WARNING, ERROR, CRITICAL
+log_level: INFO
+
+# Default output format for reports
+# Choices: json, text, csv
+output_format: json
+
+# Enable verbose output with detailed evidence
+enable_verbose: false
+
+# ============================================
+# Report Settings
+# ============================================
+
+# Include evidence in reports
+include_evidence: true
+
+# Include confidence scores in reports
+include_confidence_scores: true
+
+# Group issues by severity level
+group_issues_by_severity: true
+
+# ============================================
+# Performance Settings
+# ============================================
+
+# Number of records to process in each batch
+# Range: 1 - 10000
+batch_size: 100
+
+# Maximum number of worker threads for parallel processing
+# Range: 1 - 32
+max_workers: 4
+
+# Enable caching for improved performance
+cache_enabled: false
+
+# ============================================
+# File Processing
+# ============================================
+
+# Maximum file size in MB
+max_file_size_mb: 50
+
+# Supported file formats
+supported_formats:
+  - json
+  - csv
+  - pdf
+  - jpg
+  - png
+  - tiff

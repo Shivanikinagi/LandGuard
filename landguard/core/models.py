@@ -105,3 +105,220 @@ class AnomalyReport(BaseModel):
         d = super().dict(**kwargs)
         # Ensure all datetime objects are converted to strings
         return d
+    
+"""
+Data models for land records and fraud detection.
+"""
+
+from datetime import datetime
+from typing import List, Optional, Any
+from pydantic import BaseModel, Field, field_validator
+
+
+class OwnerHistory(BaseModel):
+    """Owner history entry."""
+    owner_name: str
+    date: datetime
+    
+    @field_validator('owner_name')
+    @classmethod
+    def validate_owner_name(cls, v):
+        """Validate owner name is not empty."""
+        if not v or not v.strip():
+            raise ValueError('Owner name cannot be empty')
+        return v.strip()
+
+
+class Transaction(BaseModel):
+    """Transaction record."""
+    tx_id: Optional[str] = Field(default=None, description="Transaction ID (optional)")
+    from_party: str
+    to_party: str
+    date: datetime
+    amount: Optional[float] = None
+    
+    @field_validator('from_party', 'to_party')
+    @classmethod
+    def validate_party_names(cls, v):
+        """Validate party names are not empty."""
+        if not v or not v.strip():
+            raise ValueError('Party name cannot be empty')
+        return v.strip()
+    
+    @field_validator('amount')
+    @classmethod
+    def validate_amount(cls, v):
+        """Validate amount if provided."""
+        if v is not None and v < 0:
+            raise ValueError('Amount cannot be negative')
+        return v
+
+
+class LandRecord(BaseModel):
+    """Land record with ownership history and transactions."""
+    land_id: str
+    owner_history: List[OwnerHistory] = Field(default_factory=list)
+    transactions: List[Transaction] = Field(default_factory=list)
+    
+    @field_validator('land_id')
+    @classmethod
+    def validate_land_id(cls, v):
+        """Validate land ID is not empty."""
+        if not v or not v.strip():
+            raise ValueError('Land ID cannot be empty')
+        return v.strip()
+
+
+class Issue(BaseModel):
+    """Fraud detection issue."""
+    type: str
+    severity: str
+    description: str
+    details: dict = Field(default_factory=dict)
+    
+    @field_validator('severity')
+    @classmethod
+    def validate_severity(cls, v):
+        """Validate severity level."""
+        valid_severities = ['low', 'medium', 'high', 'critical']
+        if v.lower() not in valid_severities:
+            raise ValueError(f'Severity must be one of: {", ".join(valid_severities)}')
+        return v.lower()
+
+
+class AnomalyReport(BaseModel):
+    """Anomaly detection report."""
+    land_id: str
+    fraud_detected: bool = False
+    issues: List[Issue] = Field(default_factory=list)
+    risk_score: float = 0.0
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    metadata: dict = Field(default_factory=dict)
+    
+    def to_dict(self) -> dict:
+        """Convert to dictionary."""
+        return {
+            'land_id': self.land_id,
+            'fraud_detected': self.fraud_detected,
+            'fraud_indicators': [
+                {
+                    'type': issue.type,
+                    'severity': issue.severity,
+                    'confidence': 0.8,  # Default confidence
+                    'description': issue.description,
+                    'details': issue.details
+                }
+                for issue in self.issues
+            ],
+            'risk_score': self.risk_score,
+            'metadata': self.metadata
+        }
+    
+"""
+Data models for land records and fraud detection.
+"""
+
+from datetime import datetime
+from typing import List, Optional, Any
+from pydantic import BaseModel, Field, field_validator
+
+
+class OwnerHistory(BaseModel):
+    """Owner history entry."""
+    owner_name: str
+    date: datetime
+    
+    @field_validator('owner_name')
+    @classmethod
+    def validate_owner_name(cls, v):
+        """Validate owner name is not empty."""
+        if not v or not v.strip():
+            raise ValueError('Owner name cannot be empty')
+        return v.strip()
+
+
+class Transaction(BaseModel):
+    """Transaction record."""
+    tx_id: Optional[str] = Field(default=None, description="Transaction ID (optional)")
+    from_party: str
+    to_party: str
+    date: datetime
+    amount: Optional[float] = None
+    
+    @field_validator('from_party', 'to_party')
+    @classmethod
+    def validate_party_names(cls, v):
+        """Validate party names are not empty."""
+        if not v or not v.strip():
+            raise ValueError('Party name cannot be empty')
+        return v.strip()
+    
+    @field_validator('amount')
+    @classmethod
+    def validate_amount(cls, v):
+        """Validate amount if provided."""
+        if v is not None and v < 0:
+            raise ValueError('Amount cannot be negative')
+        return v
+
+
+class LandRecord(BaseModel):
+    """Land record with ownership history and transactions."""
+    land_id: str
+    owner_history: List[OwnerHistory] = Field(default_factory=list)
+    transactions: List[Transaction] = Field(default_factory=list)
+    source_file: Optional[str] = Field(default=None, description="Source file path (optional)")
+    
+    @field_validator('land_id')
+    @classmethod
+    def validate_land_id(cls, v):
+        """Validate land ID is not empty."""
+        if not v or not v.strip():
+            raise ValueError('Land ID cannot be empty')
+        return v.strip()
+
+
+class Issue(BaseModel):
+    """Fraud detection issue."""
+    type: str
+    severity: str
+    description: str = Field(default="", description="Issue description")
+    details: dict = Field(default_factory=dict)
+    
+    @field_validator('severity')
+    @classmethod
+    def validate_severity(cls, v):
+        """Validate severity level."""
+        valid_severities = ['low', 'medium', 'high', 'critical']
+        if v.lower() not in valid_severities:
+            raise ValueError(f'Severity must be one of: {", ".join(valid_severities)}')
+        return v.lower()
+
+
+class AnomalyReport(BaseModel):
+    """Anomaly detection report."""
+    land_id: str
+    fraud_detected: bool = False
+    issues: List[Issue] = Field(default_factory=list)
+    risk_score: float = 0.0
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    metadata: dict = Field(default_factory=dict)
+    
+    def to_dict(self) -> dict:
+        """Convert to dictionary."""
+        return {
+            'land_id': self.land_id,
+            'fraud_detected': self.fraud_detected,
+            'fraud_indicators': [
+                {
+                    'type': issue.type,
+                    'severity': issue.severity,
+                    'confidence': 0.8,  # Default confidence
+                    'description': issue.description,
+                    'details': issue.details
+                }
+                for issue in self.issues
+            ],
+            'risk_score': self.risk_score,
+            'metadata': self.metadata
+        }

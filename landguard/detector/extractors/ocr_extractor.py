@@ -34,13 +34,16 @@ class OCRExtractor(BaseExtractor):
             Dictionary containing extracted land record data
         """
         if not HAS_OCR:
-            raise ValueError("OCR libraries not installed. Install pytesseract and Pillow.")
+            raise ValueError(
+                "OCR libraries not installed. "
+                "Install with: pip install pytesseract Pillow"
+            )
         
         try:
             # Load and preprocess image
             image = Image.open(file_path)
             
-            # Convert to grayscale
+            # Convert to grayscale for better OCR
             if image.mode != 'L':
                 image = image.convert('L')
             

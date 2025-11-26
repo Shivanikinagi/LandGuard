@@ -1,0 +1,75 @@
+# LandGuard Blockchain Configuration
+# Phase 5: Blockchain & Immutability
+
+blockchain:
+  # Hash Algorithm Settings
+  hash:
+    algorithm: "SHA-256"
+    encoding: "hex"
+    salt_rounds: 12
+  
+  # IPFS Configuration
+  ipfs:
+    enabled: true
+    gateway: "https://gateway.pinata.cloud/ipfs/"
+    api_url: "https://api.pinata.cloud"
+    # Set your Pinata credentials in environment variables:
+    # PINATA_API_KEY=your_api_key
+    # PINATA_SECRET_KEY=your_secret_key
+    timeout: 30
+    retry_attempts: 3
+  
+  # Digital Signature Settings
+  signature:
+    algorithm: "RSA"
+    key_size: 2048
+    padding: "PSS"
+    hash_algorithm: "SHA-256"
+    keys_directory: "blockchain/storage/signatures"
+  
+  # Merkle Tree Configuration
+  merkle:
+    batch_size: 100
+    hash_algorithm: "SHA-256"
+    batches_directory: "blockchain/storage/batches"
+  
+  # Audit Trail Settings
+  audit:
+    enabled: true
+    log_directory: "blockchain/storage/audit_logs"
+    retention_days: 3650  # 10 years
+    include_timestamps: true
+    include_user_info: true
+  
+  # Evidence Package Settings
+  evidence:
+    output_directory: "blockchain/storage/evidence"
+    include_original_files: true
+    include_analysis_report: true
+    include_signatures: true
+    include_merkle_proof: true
+    compression: "zip"
+    encrypt: false  # Set to true for encrypted packages
+
+# Storage Settings
+storage:
+  base_path: "blockchain/storage"
+  max_file_size_mb: 100
+  cleanup_old_files: false
+  backup_enabled: true
+  backup_directory: "blockchain/storage/backups"
+
+# Security Settings
+security:
+  require_password: true
+  password_min_length: 12
+  enable_encryption: true
+  encryption_algorithm: "AES-256-GCM"
+
+# Logging
+logging:
+  level: "INFO"
+  format: "json"
+  log_file: "blockchain/logs/blockchain.log"
+  max_file_size_mb: 50
+  backup_count: 5

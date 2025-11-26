@@ -1,0 +1,13 @@
+EmployeeID,Department,ExperienceYears,Age,Salary,ProjectsCompleted,OvertimeHours,PerformanceRating,Absences
+E001,Engineering,3,25,52000,5,12,3.8,2
+E002,Engineering,5,29,65000,8,20,4.2,4
+E003,Engineering,2,24,48000,4,8,3.5,1
+E004,Marketing,4,28,56000,6,11,3.9,3
+E005,Marketing,6,32,72000,7,15,4.1,2
+E006,Marketing,7,35,78000,9,18,4.4,5
+E007,Sales,2,23,45000,3,6,3.2,1
+E008,Sales,4,30,58000,6,14,3.8,2
+E009,Sales,8,36,82000,10,22,4.6,4
+E010,HR,3,27,50000,4,7,3.7,1
+E011,HR,5,31,60000,6,9,4.0,3
+E012,HR,7,40,85000,9,17,4.5,2

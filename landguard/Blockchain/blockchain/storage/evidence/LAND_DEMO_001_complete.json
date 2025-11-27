@@ -1,0 +1,88 @@
+{
+  "record_id": "LAND_DEMO_001",
+  "evidence": {
+    "record_id": "LAND_DEMO_001",
+    "timestamp": "2025-11-27T02:49:08.555672+00:00",
+    "analysis_result": {
+      "is_fraudulent": true,
+      "risk_score": 87.5,
+      "confidence": 0.92,
+      "fraud_indicators": [
+        "Price deviation > 50%",
+        "Missing critical documents",
+        "Seller-buyer same name"
+      ]
+    },
+    "ml_predictions": {
+      "anomaly_score": 0.89,
+      "classifier_probability": 0.92,
+      "pattern_matches": 3
+    },
+    "documents": [
+      "deed.pdf",
+      "tax_receipt.pdf"
+    ],
+    "metadata": {
+      "version": "1.0",
+      "user_id": "demo_analyst"
+    }
+  },
+  "signed_package": {
+    "report": {
+      "record_id": "LAND_DEMO_001",
+      "timestamp": "2025-11-27T02:49:08.555672+00:00",
+      "analysis_result": {
+        "is_fraudulent": true,
+        "risk_score": 87.5,
+        "confidence": 0.92,
+        "fraud_indicators": [
+          "Price deviation > 50%",
+          "Missing critical documents",
+          "Seller-buyer same name"
+        ]
+      },
+      "ml_predictions": {
+        "anomaly_score": 0.89,
+        "classifier_probability": 0.92,
+        "pattern_matches": 3
+      },
+      "documents": [
+        "deed.pdf",
+        "tax_receipt.pdf"
+      ],
+      "metadata": {
+        "version": "1.0",
+        "user_id": "demo_analyst"
+      }
+    },
+    "signature": {
+      "signature_value": "Wx/pPU4JSNG5QjKd9ckzEG7JkiTBX14QDBSXpeKxAkQzobuvAscbrVD9ubGkATLM6PlJu9R98llFZ+ujZNmvW5D2x/hnKJqjKC/N/T6CV876wOmgkJ+Kx9pbRq8jM1vBBT5mdud6wGwPprADlVVL6uNl1ODN+C2cnznauY93vERKZmthvV11NibINboHbrOLtWxS5aLEL2Cs0Id85WHQIysAfRwBX5EA0tRRKGpKuTSVf3GT8qq3/f75Z4FHz4vpa8ohKEsGpAI+pwroE0SxaAObYCNpNBAV5KVxkFnchw8iwYoxa2vxcdxhzrwUWXj5P3V5oZKhHDYaws9D/q5O3Q==",
+      "algorithm": "RSA-PSS-SHA256",
+      "signer_name": "LandGuard System",
+      "signer_role": "Automated Fraud Detector",
+      "signed_at": "2025-11-27T02:49:09.749837",
+      "is_valid": true
+    },
+    "metadata": {
+      "version": "1.0",
+      "signed": true
+    }
+  },
+  "integrity": {
+    "evidence_hash": "818f04c4f8b8f4415251b8919500573c8ff6a423b414a96ab14127915762997d",
+    "ipfs_cid": null,
+    "ipfs_url": null,
+    "signature": "Wx/pPU4JSNG5QjKd9ckzEG7JkiTBX14QDBSXpeKxAkQzobuvAscbrVD9ubGkATLM...",
+    "signature_algorithm": "RSA-PSS-SHA256"
+  },
+  "storage": {
+    "local_backup": "blockchain\\storage\\evidence\\LAND_DEMO_001.json",
+    "ipfs": false,
+    "audit_logged": true,
+    "signed": true
+  },
+  "timestamps": {
+    "stored_at": "2025-11-27T02:49:09.795559+00:00",
+    "duration_seconds": 1.221155
+  }
+}

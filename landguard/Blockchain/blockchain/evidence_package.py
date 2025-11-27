@@ -4,9 +4,11 @@ Integrates hashing, IPFS, audit trails, signatures, and Merkle trees
 """
 
 from typing import Dict, List, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import json
+import os
+from dotenv import load_dotenv
 
 from hash_manager import HashManager, EvidenceIntegrityChecker
 from ipfs_storage import IPFSStorage, EvidenceIPFSManager
@@ -14,6 +16,8 @@ from audit_trail import AuditTrail, AuditEventType
 from digital_signature import DigitalSignatureManager, SignedEvidencePackage
 from merkle_tree import MerkleTree, EvidenceBatchManager
 
+
+load_dotenv()
 
 class CompleteEvidencePackage:
     """
@@ -57,9 +61,21 @@ class CompleteEvidencePackage:
         
         # IPFS (optional)
         if use_ipfs:
-            self.ipfs_manager = EvidenceIPFSManager(
-                IPFSStorage(use_public_gateway=True)
-            )
+            pinata_key = "23730c498814c8e463cc"
+            pinata_secret = "609832da37b5bdc97d77f963bd0481c046d07f9169ea2f7fcdfaea9067466729"
+            
+            if pinata_key and pinata_secret:
+                print(f"🔑 Using Pinata IPFS service")
+                self.ipfs_manager = EvidenceIPFSManager(
+                    IPFSStorage(
+                        pinata_api_key=pinata_key,
+                        pinata_api_secret=pinata_secret
+                    )
+                )
+            else:
+                print(f"⚠️  No Pinata credentials - IPFS disabled")
+                print(f"   Set PINATA_API_KEY and PINATA_API_SECRET in .env")
+                self.ipfs_manager = None
         else:
             self.ipfs_manager = None
         
@@ -99,7 +115,7 @@ class CompleteEvidencePackage:
         Returns:
             Complete storage result with all verification data
         """
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         print(f"\n{'='*70}")
         print(f"📦 Storing Evidence for Record: {record_id}")
@@ -115,7 +131,7 @@ class CompleteEvidencePackage:
         # Step 2: Create evidence package
         evidence = {
             'record_id': record_id,
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'analysis_result': analysis_result,
             'ml_predictions': ml_predictions or {},
             'documents': documents or [],
@@ -187,7 +203,7 @@ class CompleteEvidencePackage:
             )
         
         # Step 8: Complete audit log
-        duration = (datetime.utcnow() - start_time).total_seconds()
+        duration = (datetime.now(timezone.utc) - start_time).total_seconds()
         self.audit_trail.log_analysis_completed(
             record_id=record_id,
             result=analysis_result,
@@ -215,7 +231,7 @@ class CompleteEvidencePackage:
                 'signed': True
             },
             'timestamps': {
-                'stored_at': datetime.utcnow().isoformat(),
+                'stored_at': datetime.now(timezone.utc).isoformat(),
                 'duration_seconds': duration
             }
         }
@@ -259,7 +275,7 @@ class CompleteEvidencePackage:
         print(f"{'='*70}")
         
         verification_result = {
-            'verified_at': datetime.utcnow().isoformat(),
+            'verified_at': datetime.now(timezone.utc).isoformat(),
             'checks': {}
         }
         

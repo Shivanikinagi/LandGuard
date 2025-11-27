@@ -1,274 +1,237 @@
-import csv
-import json
-from dataclasses import dataclass
-from datetime import datetime
+"""
+LandGuard Phase 4: Report Generator
+Main interface for generating reports in multiple formats
+"""
+
+from typing import Dict, Any, List, Optional
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+import json
+import logging
 
-from jinja2 import Environment, FileSystemLoader, select_autoescape
-
-try:
-    from weasyprint import HTML  # for PDF
-    WEASYPRINT_AVAILABLE = True
-except ImportError:
-    WEASYPRINT_AVAILABLE = False
+from .base_report import BaseReport, ReportFormat, FraudAnalysisReport, ExecutiveSummaryReport
+from .exporters.html_exporter import HTMLExporter
+from .exporters.csv_exporter import CSVExporter
+from .exporters.pdf_exporter import PDFExporter
 
 
-# ---------- Data Contract ----------
-
-@dataclass
-class ReportConfig:
-    project_name: str = "LandGuard"
-    organization: str = "Pied Piper Labs"
-    include_pdf: bool = True
-    include_csv: bool = True
-    include_json: bool = True
-    # add more flags later if needed
+logger = logging.getLogger(__name__)
 
 
 class ReportGenerator:
     """
-    Takes analyzer output and generates:
-    - HTML report (with charts)
-    - Optional PDF (via WeasyPrint)
-    - CSV summary
-    - Dashboard JSON
+    Main report generation interface
+    Handles creating and exporting reports in multiple formats
     """
-
-    def __init__(self, templates_dir: Optional[str] = None, config: Optional[ReportConfig] = None):
-        base_dir = Path(__file__).resolve().parent
-        self.templates_dir = Path(templates_dir) if templates_dir else base_dir / "templates"
-        self.config = config or ReportConfig()
-
-        self.env = Environment(
-            loader=FileSystemLoader(str(self.templates_dir)),
-            autoescape=select_autoescape(["html", "xml"])
-        )
-
-    # ---------- PUBLIC API ----------
-
-    def generate_all(
+    
+    def __init__(self, output_dir: str = "reports"):
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Initialize exporters
+        self.html_exporter = HTMLExporter()
+        self.csv_exporter = CSVExporter()
+        self.pdf_exporter = PDFExporter()
+        
+        logger.info(f"ReportGenerator initialized. Output directory: {self.output_dir}")
+    
+    def create_fraud_analysis_report(
         self,
-        analyzer_result: Dict[str, Any],
-        output_dir: str,
-        base_name: str,
+        property_id: str,
+        analysis_results: Dict[str, Any]
+    ) -> FraudAnalysisReport:
+        """
+        Create fraud analysis report from analysis results
+        
+        Args:
+            property_id: Property identifier
+            analysis_results: Fraud analysis results
+        
+        Returns:
+            FraudAnalysisReport instance
+        """
+        logger.info(f"Creating fraud analysis report for property: {property_id}")
+        
+        report = FraudAnalysisReport(
+            property_id=property_id,
+            analysis_results=analysis_results
+        )
+        
+        return report
+    
+    def create_executive_summary(
+        self,
+        analysis_results: List[Dict[str, Any]]
+    ) -> ExecutiveSummaryReport:
+        """
+        Create executive summary from batch analysis results
+        
+        Args:
+            analysis_results: List of analysis results
+        
+        Returns:
+            ExecutiveSummaryReport instance
+        """
+        logger.info(f"Creating executive summary for {len(analysis_results)} properties")
+        
+        total_properties = len(analysis_results)
+        fraud_detected = sum(1 for r in analysis_results if r.get('fraud_detected', False))
+        high_risk_properties = [
+            r.get('property', {}).get('id', 'Unknown')
+            for r in analysis_results
+            if r.get('risk_score', 0) >= 70
+        ]
+        
+        report = ExecutiveSummaryReport(
+            total_properties=total_properties,
+            fraud_detected=fraud_detected,
+            high_risk_properties=high_risk_properties
+        )
+        
+        return report
+    
+    def export(
+        self,
+        report: BaseReport,
+        format: ReportFormat,
+        filename: Optional[str] = None
+    ) -> str:
+        """
+        Export report to specified format and save to file
+        
+        Args:
+            report: Report to export
+            format: Output format
+            filename: Optional custom filename
+        
+        Returns:
+            Path to saved file
+        """
+        logger.info(f"Exporting report {report.report_id} to {format.value}")
+        
+        # Generate filename if not provided
+        if not filename:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"{report.report_id}_{timestamp}.{format.value}"
+        
+        filepath = self.output_dir / filename
+        
+        # Export based on format
+        if format == ReportFormat.HTML:
+            content = self.html_exporter.export(report)
+            filepath.write_text(content, encoding='utf-8')
+        
+        elif format == ReportFormat.CSV:
+            content = self.csv_exporter.export(report)
+            filepath.write_text(content, encoding='utf-8')
+        
+        elif format == ReportFormat.PDF:
+            content = self.pdf_exporter.export(report)
+            filepath.write_bytes(content)
+        
+        elif format == ReportFormat.JSON:
+            content = json.dumps(report.to_dict(), indent=2)
+            filepath.write_text(content, encoding='utf-8')
+        
+        else:
+            raise ValueError(f"Unsupported format: {format}")
+        
+        logger.info(f"Report saved to: {filepath}")
+        return str(filepath)
+    
+    def export_all_formats(
+        self,
+        report: BaseReport,
+        base_filename: Optional[str] = None
     ) -> Dict[str, str]:
         """
-        Generate HTML, PDF, CSV, JSON in one go.
-
-        Returns a dict with paths to generated files.
+        Export report in all supported formats
+        
+        Args:
+            report: Report to export
+            base_filename: Base filename (without extension)
+        
+        Returns:
+            Dictionary mapping format to filepath
         """
-        output_dir_path = Path(output_dir)
-        output_dir_path.mkdir(parents=True, exist_ok=True)
-
-        normalized = self._normalize_analyzer_result(analyzer_result)
-
-        # HTML
-        html_output_path = output_dir_path / f"{base_name}.html"
-        html = self.render_html(normalized)
-        html_output_path.write_text(html, encoding="utf-8")
-
-        results = {"html": str(html_output_path)}
-
-        # PDF
-        if self.config.include_pdf and WEASYPRINT_AVAILABLE:
-            pdf_output_path = output_dir_path / f"{base_name}.pdf"
-            self.export_pdf(html, pdf_output_path)
-            results["pdf"] = str(pdf_output_path)
-
-        # CSV
-        if self.config.include_csv:
-            csv_output_path = output_dir_path / f"{base_name}.csv"
-            self.export_csv(normalized, csv_output_path)
-            results["csv"] = str(csv_output_path)
-
-        # JSON
-        if self.config.include_json:
-            json_output_path = output_dir_path / f"{base_name}.json"
-            self.export_json(normalized, json_output_path)
-            results["json"] = str(json_output_path)
-
+        logger.info(f"Exporting report {report.report_id} in all formats")
+        
+        if not base_filename:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            base_filename = f"{report.report_id}_{timestamp}"
+        
+        results = {}
+        
+        for format in [ReportFormat.HTML, ReportFormat.CSV, ReportFormat.JSON, ReportFormat.PDF]:
+            try:
+                filename = f"{base_filename}.{format.value}"
+                filepath = self.export(report, format, filename)
+                results[format.value] = filepath
+            except Exception as e:
+                logger.error(f"Failed to export to {format.value}: {e}")
+                results[format.value] = None
+        
         return results
-
-    def render_html(self, normalized: Dict[str, Any]) -> str:
-        template = self.env.get_template("report.html")
-        return template.render(
-            report=normalized,
-            generated_at=datetime.utcnow().isoformat() + "Z",
-            project_name=self.config.project_name,
-            organization=self.config.organization,
-        )
-
-    def export_pdf(self, html_str: str, output_path: Path) -> None:
-        if not WEASYPRINT_AVAILABLE:
-            raise RuntimeError("WeasyPrint is not installed. Run `pip install weasyprint`.")
-        HTML(string=html_str).write_pdf(str(output_path))
-
-    def export_csv(self, normalized: Dict[str, Any], output_path: Path) -> None:
+    
+    def export_batch_csv(
+        self,
+        analysis_results: List[Dict[str, Any]],
+        filename: Optional[str] = None
+    ) -> str:
         """
-        Writes a flat CSV: one row per anomaly / issue.
+        Export batch analysis results to CSV
+        
+        Args:
+            analysis_results: List of analysis results
+            filename: Optional filename
+        
+        Returns:
+            Path to saved file
         """
-        rows = []
-
-        for anomaly in normalized["anomalies"]:
-            rows.append(
-                {
-                    "land_id": normalized["summary"]["land_id"],
-                    "risk_score": normalized["summary"]["risk_score"],
-                    "rule_id": anomaly.get("rule_id"),
-                    "rule_name": anomaly.get("rule_name"),
-                    "severity": anomaly.get("severity"),
-                    "description": anomaly.get("description"),
-                    "timestamp": anomaly.get("timestamp", ""),
-                }
-            )
-
-        # Fallback: if no anomalies, add a summary row
-        if not rows:
-            rows.append(
-                {
-                    "land_id": normalized["summary"]["land_id"],
-                    "risk_score": normalized["summary"]["risk_score"],
-                    "rule_id": "",
-                    "rule_name": "",
-                    "severity": "NONE",
-                    "description": "No anomalies detected",
-                    "timestamp": "",
-                }
-            )
-
-        with output_path.open("w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(
-                f,
-                fieldnames=[
-                    "land_id",
-                    "risk_score",
-                    "rule_id",
-                    "rule_name",
-                    "severity",
-                    "description",
-                    "timestamp",
-                ],
-            )
-            writer.writeheader()
-            writer.writerows(rows)
-
-    def export_json(self, normalized: Dict[str, Any], output_path: Path) -> None:
+        logger.info(f"Exporting batch analysis ({len(analysis_results)} properties) to CSV")
+        
+        if not filename:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"batch_analysis_{timestamp}.csv"
+        
+        filepath = self.output_dir / filename
+        
+        content = self.csv_exporter.export_batch_analysis(analysis_results)
+        filepath.write_text(content, encoding='utf-8')
+        
+        logger.info(f"Batch CSV saved to: {filepath}")
+        return str(filepath)
+    
+    def get_report_summary(self, report: BaseReport) -> Dict[str, Any]:
         """
-        Dashboard-ready JSON. You can directly feed this to a React / Plotly frontend.
+        Get summary information about a report
+        
+        Args:
+            report: Report instance
+        
+        Returns:
+            Summary dictionary
         """
-        with output_path.open("w", encoding="utf-8") as f:
-            json.dump(normalized, f, indent=2, default=str)
-
-    # ---------- INTERNAL: Normalization Layer ----------
-
-    def _normalize_analyzer_result(self, raw: Dict[str, Any]) -> Dict[str, Any]:
+        return report.get_summary()
+    
+    def list_reports(self, format: Optional[ReportFormat] = None) -> List[str]:
         """
-        Shape whatever your analyzer returns into a stable schema for reporting.
-        Adjust this to match your actual engine output.
+        List all saved reports
+        
+        Args:
+            format: Optional filter by format
+        
+        Returns:
+            List of report filepaths
         """
+        if format:
+            pattern = f"*.{format.value}"
+        else:
+            pattern = "*.*"
+        
+        reports = [str(f) for f in self.output_dir.glob(pattern) if f.is_file()]
+        return sorted(reports, reverse=True)
 
-        # Example assumptions about `raw` keys (adapt to your real structure):
-        # raw = {
-        #   "land_id": "...",
-        #   "owner": {...},
-        #   "transactions": [...],
-        #   "rules": [...],
-        #   "anomalies": [...],
-        #   "geo": {"lat": ..., "lon": ...},
-        #   "stats": {...},
-        # }
 
-        land_id = raw.get("land_id", "UNKNOWN")
-        owner = raw.get("owner", {})
-        stats = raw.get("stats", {})
-        rules = raw.get("rules", [])
-        anomalies = raw.get("anomalies", [])
-        transactions = raw.get("transactions", [])
-        geo = raw.get("geo", {})
-
-        # Compute summary numbers
-        total_rules = len(rules)
-        triggered_rules = [r for r in rules if r.get("triggered")]
-        anomaly_count = len(anomalies)
-        risk_score = stats.get("risk_score", self._compute_risk_score(triggered_rules, anomalies))
-
-        # Prepare chart data
-        rule_hit_counts = self._build_rule_hit_counts(rules)
-        severity_distribution = self._build_severity_distribution(anomalies)
-        timeline = self._build_timeline(transactions)
-
-        normalized = {
-            "summary": {
-                "land_id": land_id,
-                "owner_name": owner.get("name", "Unknown"),
-                "location": owner.get("address", "Unknown"),
-                "risk_score": risk_score,
-                "total_rules": total_rules,
-                "triggered_rule_count": len(triggered_rules),
-                "anomaly_count": anomaly_count,
-            },
-            "rules": rules,
-            "anomalies": anomalies,
-            "transactions": transactions,
-            "geo": geo,
-            "charts": {
-                "rule_hit_counts": rule_hit_counts,
-                "severity_distribution": severity_distribution,
-                "timeline": timeline,
-            },
-        }
-
-        return normalized
-
-    def _compute_risk_score(self, triggered_rules: List[Dict[str, Any]], anomalies: List[Dict[str, Any]]) -> float:
-        """
-        Simple fallback risk scoring. You can replace this with your ML score later.
-        """
-        base = 0.0
-        for r in triggered_rules:
-            severity = r.get("severity", "medium").lower()
-            if severity == "low":
-                base += 5
-            elif severity == "medium":
-                base += 10
-            elif severity == "high":
-                base += 20
-
-        # anomalies bonus
-        base += len(anomalies) * 2.5
-
-        # cap at 100
-        return min(base, 100.0)
-
-    def _build_rule_hit_counts(self, rules: List[Dict[str, Any]]) -> Dict[str, Any]:
-        labels = []
-        values = []
-        for r in rules:
-            labels.append(r.get("id", r.get("name", "rule")))
-            values.append(int(r.get("hit_count", 1 if r.get("triggered") else 0)))
-        return {"labels": labels, "values": values}
-
-    def _build_severity_distribution(self, anomalies: List[Dict[str, Any]]) -> Dict[str, Any]:
-        buckets = {"low": 0, "medium": 0, "high": 0, "critical": 0}
-        for a in anomalies:
-            sev = str(a.get("severity", "medium")).lower()
-            if sev not in buckets:
-                buckets[sev] = 0
-            buckets[sev] += 1
-
-        labels = list(buckets.keys())
-        values = [buckets[k] for k in labels]
-        return {"labels": labels, "values": values}
-
-    def _build_timeline(self, transactions: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """
-        Expecting each transaction like:
-        { "date": "2024-01-01", "amount": 1000000, "type": "sale" }
-        """
-        dates = []
-        values = []
-        for t in sorted(transactions, key=lambda x: x.get("date", "")):
-            dates.append(t.get("date", ""))
-            values.append(t.get("amount", 0))
-        return {"dates": dates, "values": values}
+# Export
+__all__ = ['ReportGenerator']

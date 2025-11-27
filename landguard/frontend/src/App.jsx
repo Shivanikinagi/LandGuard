@@ -16,6 +16,7 @@ import AnalysisView from './components/AnalysisView'
 import BulkUpload from './components/BulkUpload'
 import ReportCenter from './components/ReportCenter'
 import UserManagement from './components/UserManagement'
+import DocumentProcessor from './components/DocumentProcessor'
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -53,6 +54,7 @@ function App() {
               <Route path="land-records/:id" element={<LandRecordDetail />} />
               <Route path="analysis" element={<AnalysisView />} />
               <Route path="bulk-upload" element={<BulkUpload />} />
+              <Route path="process-document" element={<DocumentProcessor />} />
               <Route path="reports" element={<ReportCenter />} />
               <Route path="users" element={<UserManagement />} />
             </Route>

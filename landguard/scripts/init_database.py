@@ -17,7 +17,7 @@ from database import (
     check_db_connection,
     User,
     LandRecord,
-    Analysis,
+    AnalysisResult,
     AuditLog
 )
 
@@ -178,8 +178,8 @@ def create_sample_analyses(db):
     created_count = 0
     for record in land_records:
         try:
-            existing_analysis = db.query(Analysis).filter(
-                Analysis.land_record_id == record.id
+            existing_analysis = db.query(AnalysisResult).filter(
+                AnalysisResult.land_record_id == record.id
             ).first()
             
             if not existing_analysis:
@@ -200,13 +200,13 @@ def create_sample_analyses(db):
                 elif risk_level == "MEDIUM":
                     flags = ["Minor discrepancy in documentation"]
                 
-                analysis = Analysis(
+                analysis = AnalysisResult(
                     land_record_id=record.id,
-                    risk_level=risk_level,
-                    fraud_probability=round(fraud_prob, 2),
-                    flags=flags,
-                    recommendation=f"Analysis completed - {risk_level} risk detected",
-                    analyzed_by="system"
+                    fraud_detected=risk_level in ["HIGH", "MEDIUM"],
+                    fraud_score=round(fraud_prob, 2),
+                    fraud_indicators=flags,
+                    risk_assessment=risk_level,
+                    confidence_score=round(random.uniform(0.8, 0.95), 2)
                 )
                 db.add(analysis)
                 
@@ -274,7 +274,7 @@ def main():
         print("\nDatabase Summary:")
         print(f"  Users: {db.query(User).count()}")
         print(f"  Land Records: {db.query(LandRecord).count()}")
-        print(f"  Analyses: {db.query(Analysis).count()}")
+        print(f"  Analyses: {db.query(AnalysisResult).count()}")
         print("\nSample credentials:")
         print("  Admin:   admin / admin123")
         print("  Analyst: analyst / analyst123")

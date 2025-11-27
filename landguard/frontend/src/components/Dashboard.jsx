@@ -7,21 +7,27 @@ import {
   Typography,
   CircularProgress,
   Alert,
+  Button,
 } from '@mui/material'
 import {
   TrendingUp,
   Warning,
   CheckCircle,
   Assessment,
+  People,
+  Refresh,
 } from '@mui/icons-material'
 import StatsCard from './StatsCard'
 import RiskChart from './RiskChart'
-import { getDashboardStats } from '../services/dashboard'
+import { getDashboardStats, getDashboardTrends } from '../services/dashboard'
+import { useNavigate } from 'react-router-dom'
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [dashboardData, setDashboardData] = useState(null)
+  const [trendsData, setTrendsData] = useState(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetchDashboardData()
@@ -31,11 +37,34 @@ const Dashboard = () => {
     try {
       setLoading(true)
       setError(null)
-      const data = await getDashboardStats()
-      setDashboardData(data)
+      
+      // Fetch both overview and trends data
+      const [statsResponse, trendsResponse] = await Promise.all([
+        getDashboardStats(),
+        getDashboardTrends()
+      ])
+      
+      setDashboardData(statsResponse.data)
+      setTrendsData(trendsResponse.data)
     } catch (err) {
       console.error('Error fetching dashboard data:', err)
-      setError('Failed to load dashboard data. Please try again.')
+      setError(err)
+      
+      // Handle 403 Forbidden specifically
+      if (err.response?.status === 403) {
+        setError(new Error('Authentication failed. Please log in again.'))
+        // Optionally redirect to login
+        setTimeout(() => {
+          localStorage.removeItem('token')
+          navigate('/login')
+        }, 3000)
+      } else if (err.response?.status === 401) {
+        setError(new Error('Session expired. Please log in again.'))
+        localStorage.removeItem('token')
+        navigate('/login')
+      } else {
+        setError(new Error('Failed to load dashboard data. Please try again.'))
+      }
     } finally {
       setLoading(false)
     }
@@ -52,138 +81,106 @@ const Dashboard = () => {
   if (error) {
     return (
       <Box p={3}>
-        <Alert severity="error">{error}</Alert>
+        <Alert 
+          severity="error" 
+          action={
+            <Button 
+              color="inherit" 
+              size="small" 
+              startIcon={<Refresh />}
+              onClick={fetchDashboardData}
+            >
+              Retry
+            </Button>
+          }
+        >
+          {error.message}
+        </Alert>
       </Box>
     )
   }
 
-  const stats = dashboardData?.statistics || {}
-  const recentAnalyses = dashboardData?.recent_analyses || []
-  const fraudTrends = dashboardData?.fraud_trends || []
-  const riskDistribution = dashboardData?.risk_distribution || []
-
   return (
-    <Box>
-      <Typography variant="h4" fontWeight="bold" gutterBottom>
-        Dashboard
+    <Box p={3}>
+      <Typography variant="h4" gutterBottom>
+        🏛️ LandGuard Dashboard
       </Typography>
-      <Typography variant="body2" color="text.secondary" mb={3}>
+      <Typography variant="subtitle1" color="textSecondary" gutterBottom>
         Overview of land fraud detection system
       </Typography>
 
-      {/* Stats Cards */}
-      <Grid container spacing={3} mb={4}>
+      <Grid container spacing={3} mt={2}>
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Total Records"
-            value={stats.total_records || 0}
+            value={dashboardData?.total_records || 0}
             icon={<Assessment />}
             color="primary"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
-            title="Flagged Records"
-            value={stats.flagged_records || 0}
-            icon={<Warning />}
-            color="error"
+            title="Total Users"
+            value={dashboardData?.total_users || 0}
+            icon={<People />}
+            color="secondary"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
-            title="High Risk"
-            value={stats.high_risk || 0}
-            icon={<TrendingUp />}
+            title="Fraud Detected"
+            value={dashboardData?.fraud_detected || 0}
+            icon={<Warning />}
             color="warning"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Fraud Rate"
-            value={`${stats.fraud_percentage || 0}%`}
-            icon={<CheckCircle />}
-            color="success"
+            value={`${dashboardData?.fraud_rate || 0}%`}
+            icon={<TrendingUp />}
+            color="error"
           />
         </Grid>
       </Grid>
 
-      {/* Charts */}
-      <Grid container spacing={3} mb={4}>
-        <Grid item xs={12} md={8}>
+      <Grid container spacing={3} mt={3}>
+        <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Fraud Trends
               </Typography>
-              <RiskChart data={fraudTrends} type="line" />
+              <RiskChart data={trendsData?.fraud_trends || []} />
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Risk Distribution
               </Typography>
-              <RiskChart data={riskDistribution} type="pie" />
+              <RiskChart data={trendsData?.risk_distribution || []} />
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* Recent Analyses */}
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Recent Analyses
-          </Typography>
-          <Box>
-            {recentAnalyses.length === 0 ? (
-              <Typography color="text.secondary">No recent analyses found</Typography>
-            ) : (
-              recentAnalyses.map((analysis) => (
-                <Box
-                  key={analysis.id}
-                  p={2}
-                  mb={1}
-                  borderRadius={1}
-                  bgcolor="grey.50"
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                >
-                  <Box>
-                    <Typography variant="body1" fontWeight={500}>
-                      {analysis.land_record_id}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {analysis.location}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      px={1.5}
-                      py={0.5}
-                      borderRadius={1}
-                      bgcolor={
-                        analysis.risk_level === 'HIGH'
-                          ? 'error.light'
-                          : analysis.risk_level === 'MEDIUM'
-                          ? 'warning.light'
-                          : 'success.light'
-                      }
-                      color="white"
-                    >
-                      {analysis.risk_level}
-                    </Typography>
-                  </Box>
-                </Box>
-              ))
-            )}
-          </Box>
-        </CardContent>
-      </Card>
+      <Box mt={3}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Recent Analyses
+            </Typography>
+            <Typography color="textSecondary">
+              {trendsData?.recent_analyses?.length > 0 
+                ? "Recent analysis data will be displayed here" 
+                : "No recent analyses available"}
+            </Typography>
+          </CardContent>
+        </Card>
+      </Box>
     </Box>
   )
 }

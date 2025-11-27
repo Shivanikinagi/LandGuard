@@ -3,6 +3,6 @@ API Package
 FastAPI application and routes
 """
 
-from .main import app
+# from .main import app
 
-__all__ = ['app']
+__all__ = []

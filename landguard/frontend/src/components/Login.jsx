@@ -62,7 +62,26 @@ const Login = () => {
       navigate('/dashboard')
     } catch (err) {
       console.error('Login error:', err)
-      setError(err.response?.data?.detail || 'Invalid credentials. Please try again.')
+      
+      // Handle different types of error responses
+      let errorMessage = 'Invalid credentials. Please try again.'
+      
+      if (err.response?.data?.detail) {
+        const detail = err.response.data.detail
+        if (typeof detail === 'string') {
+          errorMessage = detail
+        } else if (Array.isArray(detail)) {
+          // Handle validation errors array
+          errorMessage = detail.map(error => 
+            `${error.loc?.join('.')}: ${error.msg}`
+          ).join(', ') || errorMessage
+        } else if (typeof detail === 'object') {
+          // Handle object errors
+          errorMessage = detail.message || JSON.stringify(detail)
+        }
+      }
+      
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

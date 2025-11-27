@@ -1,109 +1,133 @@
 """
-Statistics and Dashboard Routes
+Statistics Routes
+System statistics and analytics endpoints
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from datetime import datetime, timedelta
+from typing import Dict, Any
+import logging
 
-from database.connection import get_db
-from database.models import LandRecord, Analysis
-from api.routes.auth import get_current_user
+from database import get_db
+from database.models import User, LandRecord, AnalysisResult
+from database.auth import decode_access_token
 
 router = APIRouter()
+security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
 
-@router.get("/dashboard")
-async def get_dashboard_stats(
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+) -> User:
+    """Get current authenticated user"""
+    # Log token info for debugging
+    logger.info(f"Token received: {credentials.credentials[:20] if credentials.credentials else 'None'}...")
+    
+    if not credentials or not credentials.credentials:
+        logger.error("No credentials provided")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    try:
+        payload = decode_access_token(credentials.credentials)
+        logger.info(f"Token payload: {payload}")
+        
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            logger.error("No user ID in token payload")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            
+        user = db.query(User).filter(User.id == user_id).first()
+        if user is None:
+            logger.error(f"User not found: {user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            
+        logger.info(f"Authenticated user: {user.username}")
+        return user
+    except Exception as e:
+        logger.error(f"Token validation error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
+@router.get("/overview")
+async def get_statistics_overview(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    """Get dashboard statistics"""
+    """Get system statistics overview"""
+    logger.info(f"Getting statistics overview for user: {current_user.username}")
     
-    # Total records
-    total_records = db.query(func.count(LandRecord.id)).scalar() or 0
-    
-    # Total analyses
-    total_analyses = db.query(func.count(Analysis.id)).scalar() or 0
-    
-    # Flagged records (high risk)
-    flagged_records = db.query(func.count(Analysis.id)).filter(
-        Analysis.risk_level == "HIGH"
-    ).scalar() or 0
-    
-    # Risk level distribution
-    high_risk = db.query(func.count(Analysis.id)).filter(
-        Analysis.risk_level == "HIGH"
-    ).scalar() or 0
-    
-    medium_risk = db.query(func.count(Analysis.id)).filter(
-        Analysis.risk_level == "MEDIUM"
-    ).scalar() or 0
-    
-    low_risk = db.query(func.count(Analysis.id)).filter(
-        Analysis.risk_level == "LOW"
-    ).scalar() or 0
-    
-    # Calculate fraud percentage
-    fraud_percentage = (flagged_records / total_records * 100) if total_records > 0 else 0
-    
-    # Recent analyses
-    recent_analyses = db.query(Analysis).order_by(
-        Analysis.created_at.desc()
-    ).limit(5).all()
-    
-    recent_analyses_data = []
-    for analysis in recent_analyses:
-        land_record = db.query(LandRecord).filter(
-            LandRecord.id == analysis.land_record_id
-        ).first()
+    try:
+        # Get total records
+        total_records = db.query(LandRecord).count()
         
-        recent_analyses_data.append({
-            "id": analysis.id,
-            "land_record_id": land_record.record_number if land_record else "N/A",
-            "risk_level": analysis.risk_level,
-            "fraud_probability": analysis.fraud_probability,
-            "created_at": analysis.created_at.isoformat(),
-            "location": land_record.location if land_record else "Unknown"
-        })
-    
-    # Fraud trends (last 6 months)
-    six_months_ago = datetime.utcnow() - timedelta(days=180)
-    
-    fraud_trends = []
-    for i in range(6):
-        month_start = six_months_ago + timedelta(days=30 * i)
-        month_end = month_start + timedelta(days=30)
+        # Get total users
+        total_users = db.query(User).count()
         
-        count = db.query(func.count(Analysis.id)).filter(
-            Analysis.created_at >= month_start,
-            Analysis.created_at < month_end,
-            Analysis.risk_level == "HIGH"
-        ).scalar() or 0
+        # Get fraud detected (assuming fraud_flag=True means fraud detected)
+        fraud_detected = db.query(LandRecord).filter(LandRecord.fraud_flag == True).count()
         
-        fraud_trends.append({
-            "month": month_start.strftime("%b"),
-            "count": count
-        })
-    
-    # Risk distribution for chart
-    risk_distribution = [
-        {"name": "High Risk", "value": high_risk, "color": "#f44336"},
-        {"name": "Medium Risk", "value": medium_risk, "color": "#ff9800"},
-        {"name": "Low Risk", "value": low_risk, "color": "#4caf50"}
-    ]
-    
-    return {
-        "statistics": {
+        # Calculate fraud rate
+        fraud_rate = (fraud_detected / total_records * 100) if total_records > 0 else 0
+        
+        result = {
             "total_records": total_records,
-            "flagged_records": flagged_records,
-            "high_risk": high_risk,
-            "medium_risk": medium_risk,
-            "low_risk": low_risk,
-            "fraud_percentage": round(fraud_percentage, 2)
-        },
-        "recent_analyses": recent_analyses_data,
-        "fraud_trends": fraud_trends,
-        "risk_distribution": risk_distribution
-    }
+            "total_users": total_users,
+            "fraud_detected": fraud_detected,
+            "fraud_rate": round(fraud_rate, 2)
+        }
+        
+        logger.info(f"Statistics overview result: {result}")
+        return result
+    except Exception as e:
+        logger.error(f"Error getting statistics overview: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve statistics"
+        )
+
+
+@router.get("/trends")
+async def get_statistics_trends(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get system statistics trends"""
+    logger.info(f"Getting statistics trends for user: {current_user.username}")
+    
+    try:
+        # For now, return dummy data - in a real implementation this would
+        # return time-series data for charts
+        result = {
+            "fraud_trends": [],
+            "risk_distribution": [],
+            "recent_analyses": []
+        }
+        
+        logger.info(f"Statistics trends result: {result}")
+        return result
+    except Exception as e:
+        logger.error(f"Error getting statistics trends: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve trends"
+        )

@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+"""
+LandGuard CLI Wrapper
+"""
+
+import sys
+import os
+
+# Add the cli directory to the path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'cli'))
+
+if __name__ == "__main__":
+    from landguard_cli import main
+    sys.exit(main())

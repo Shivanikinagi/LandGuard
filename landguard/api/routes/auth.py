@@ -1,176 +1,115 @@
 """
-Authentication endpoints.
+Authentication Routes
+User login, registration, and token management
 """
 
-from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+from datetime import timedelta
 
-from api.models.requests import TokenRequest, TokenRefreshRequest
-from api.models.responses import TokenResponse, UserInfoResponse, ErrorResponse
-from api.dependencies import get_current_user, auth_manager, audit_logger
-from core.security.auth import UserRole
+from database import get_db
+from database.models import User
+from database.repositories import UserRepository
+from database.auth import (
+    verify_password,
+    get_password_hash,
+    create_access_token,
+    decode_access_token
+)
+from api.models.requests import UserLoginRequest, UserCreateRequest
+from api.models.responses import UserResponse, TokenResponse
+from api.dependencies import get_current_user
 
-router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
+router = APIRouter()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
-
-@router.post("/token", response_model=TokenResponse, responses={401: {"model": ErrorResponse}})
-async def create_token(request: TokenRequest):
-    """
-    Create JWT token for authentication.
-    
-    For demo purposes, accepts any username with password length >= 8.
-    In production, verify against a user database.
-    """
-    # Demo authentication - replace with real user verification
-    if len(request.password) < 8:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials"
-        )
-    
-    # Determine role based on username (demo logic)
-    if "admin" in request.username.lower():
-        role = UserRole.ADMIN
-    elif "analyst" in request.username.lower():
-        role = UserRole.ANALYST
-    else:
-        role = UserRole.VIEWER
-    
-    # Create JWT token
-    if not auth_manager.jwt_enabled:
-        raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="JWT authentication not available"
-        )
-    
-    token = auth_manager.create_jwt_token(
-        user_id=request.username,
-        role=role
-    )
-    
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create token"
-        )
-    
-    # Log successful token creation
-    audit_logger.log_authentication(
-        user_id=request.username,
-        ip_address="unknown",  # Will be set by middleware
-        success=True,
-        auth_method="jwt_creation"
-    )
-    
-    return TokenResponse(
-        access_token=token,
-        token_type="bearer",
-        expires_in=86400,  # 24 hours
-        refresh_token=None  # Implement refresh tokens if needed
-    )
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
-@router.post("/refresh", response_model=TokenResponse, responses={401: {"model": ErrorResponse}})
-async def refresh_token(request: TokenRefreshRequest):
-    """
-    Refresh an expired JWT token.
-    """
-    if not auth_manager.jwt_enabled:
-        raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="JWT authentication not available"
-        )
-    
-    new_token = auth_manager.jwt_auth.refresh_token(request.refresh_token)
-    
-    if not new_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired refresh token"
-        )
-    
-    return TokenResponse(
-        access_token=new_token,
-        token_type="bearer",
-        expires_in=86400
-    )
-
-
-@router.get("/me", response_model=UserInfoResponse)
-async def get_current_user_info(user: dict = Depends(get_current_user)):
-    """
-    Get current authenticated user information.
-    """
-    role = user.get('role')
-    
-    # Get permissions for role
-    from core.security.auth import ROLE_PERMISSIONS
-    permissions = [p.value for p in ROLE_PERMISSIONS.get(role, [])]
-    
-    return UserInfoResponse(
-        user_id=user.get('user_id', 'unknown'),
-        role=role.value if hasattr(role, 'value') else str(role),
-        permissions=permissions
-    )
-
-
-@router.post("/api-key/create", response_model=dict)
-async def create_api_key(
-    role: str,
-    description: str = None,
-    user: dict = Depends(get_current_user)
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def register(
+    request: UserCreateRequest,
+    db: Session = Depends(get_db)
 ):
-    """
-    Create a new API key (admin only).
-    """
-    # Check if user is admin
-    if user.get('role') != UserRole.ADMIN:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
-        )
-    
-    try:
-        user_role = UserRole(role)
-    except ValueError:
+    """Register a new user"""
+    # Check if username already exists
+    existing_user = UserRepository.get_by_username(db, request.username)
+    if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid role: {role}"
+            detail="Username already registered"
         )
     
-    api_key = auth_manager.create_api_key(user_role, description)
-    
-    # Log API key creation
-    audit_logger.log_event(
-        audit_logger.logger.makeRecord(
-            name='security.api_key',
-            level=20,  # INFO
-            fn='',
-            lno=0,
-            msg=f'API key created for role {role}',
-            args=(),
-            exc_info=None
+    # Check if email already exists
+    existing_email = UserRepository.get_by_email(db, request.email)
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
         )
+    
+    # Create new user
+    user = User(
+        username=request.username,
+        email=request.email,
+        password_hash=get_password_hash(request.password),
+        full_name=request.full_name,
+        role=request.role,
+        is_active=True
     )
     
-    return {
-        "api_key": api_key,
-        "role": role,
-        "description": description,
-        "created_at": datetime.utcnow().isoformat()
-    }
+    created_user = UserRepository.create(db, user)
+    return created_user
 
 
-@router.get("/api-keys", response_model=list)
-async def list_api_keys(user: dict = Depends(get_current_user)):
-    """
-    List all API keys (admin only).
-    """
-    # Check if user is admin
-    if user.get('role') != UserRole.ADMIN:
+@router.post("/login", response_model=TokenResponse)
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    """Login and get access token"""
+    # Get user by username
+    user = UserRepository.get_by_username(db, form_data.username)
+    
+    if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
         )
     
-    return auth_manager.api_key_auth.list_keys()
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user"
+        )
+    
+    # Create access token
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username},
+        expires_delta=access_token_expires
+    )
+    
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserResponse.model_validate(user)
+    )
+
+
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user)
+):
+    """Get current user information"""
+    return current_user
+
+
+@router.post("/logout")
+async def logout(
+    current_user: User = Depends(get_current_user)
+):
+    """Logout (client should discard token)"""
+    return {"message": "Successfully logged out"}

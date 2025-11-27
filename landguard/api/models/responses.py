@@ -1,87 +1,173 @@
 """
-API response models using Pydantic.
+API Response Models
+Pydantic models for API responses
 """
 
-from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, EmailStr, ConfigDict
+from typing import Optional, List, Any, Dict
 from datetime import datetime
-from pydantic import BaseModel, Field
 
 
-class FraudIndicatorResponse(BaseModel):
-    """Fraud indicator in response."""
-    type: str
-    severity: str
-    confidence: float
-    description: str
-    details: Dict[str, Any]
-
-
-class AnalysisResultResponse(BaseModel):
-    """Analysis result for a single land record."""
-    land_id: str
-    fraud_detected: bool
-    risk_score: float = Field(..., ge=0, le=100)
-    fraud_indicators: List[FraudIndicatorResponse]
-    analysis_timestamp: datetime
-    metadata: Optional[Dict[str, Any]] = None
-
-
-class BatchAnalysisResultResponse(BaseModel):
-    """Batch analysis result."""
-    total_records: int
-    records_analyzed: int
-    high_risk_count: int
-    medium_risk_count: int
-    low_risk_count: int
-    results: List[AnalysisResultResponse]
-    processing_time_seconds: float
-    batch_id: str
-
-
-class ErrorResponse(BaseModel):
-    """Error response."""
-    error: str
-    message: str
-    details: Optional[Dict[str, Any]] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-
-
-class HealthResponse(BaseModel):
-    """Health check response."""
-    status: str
-    version: str
-    timestamp: datetime
-    checks: Dict[str, bool]
+class UserResponse(BaseModel):
+    """User response model"""
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    username: str
+    email: EmailStr
+    full_name: Optional[str] = None
+    role: str
+    is_active: bool
+    created_at: datetime
 
 
 class TokenResponse(BaseModel):
-    """JWT token response."""
+    """Token response model"""
     access_token: str
     token_type: str = "bearer"
-    expires_in: int
-    refresh_token: Optional[str] = None
+    user: UserResponse
 
 
-class UserInfoResponse(BaseModel):
-    """User information response."""
-    user_id: str
-    role: str
-    permissions: List[str]
+class LandRecordResponse(BaseModel):
+    """Land record response model"""
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    record_number: str
+    owner_name: str
+    location: str
+    area: float
+    status: str
+    document_path: Optional[str] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
 
 
-class RateLimitInfoResponse(BaseModel):
-    """Rate limit information response."""
+class AnalysisResponse(BaseModel):
+    """Analysis response model"""
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    land_record_id: int
+    risk_level: str
+    fraud_probability: float
+    flags: List[str] = []
+    recommendation: Optional[str] = None
+    analyzed_by: Optional[str] = None
+    created_at: datetime
+    land_record: Optional[LandRecordResponse] = None
+
+
+class DashboardStatsResponse(BaseModel):
+    """Dashboard statistics response"""
+    total_records: int
+    flagged_records: int
+    high_risk: int
+    medium_risk: int
+    low_risk: int
+    fraud_percentage: float
+
+
+class RecentAnalysisItem(BaseModel):
+    """Recent analysis item"""
+    id: int
+    land_record_id: str
+    risk_level: str
+    fraud_probability: float
+    created_at: str
+    location: str
+
+
+class FraudTrendItem(BaseModel):
+    """Fraud trend item"""
+    month: str
+    count: int
+
+
+class RiskDistributionItem(BaseModel):
+    """Risk distribution item"""
+    name: str
+    value: int
+    color: str
+
+
+class DashboardResponse(BaseModel):
+    """Dashboard response with all data"""
+    statistics: DashboardStatsResponse
+    recent_analyses: List[RecentAnalysisItem]
+    fraud_trends: List[FraudTrendItem]
+    risk_distribution: List[RiskDistributionItem]
+
+
+class HealthResponse(BaseModel):
+    """Health check response"""
+    status: str
+    service: Optional[str] = None
+    version: Optional[str] = None
+    database: Optional[str] = None
+    message: Optional[str] = None
+
+
+class ErrorResponse(BaseModel):
+    """Error response model"""
+    detail: str
+    error: Optional[str] = None
+
+
+class SuccessResponse(BaseModel):
+    """Generic success response"""
+    message: str
+    data: Optional[Any] = None
+
+
+class PaginatedResponse(BaseModel):
+    """Paginated response model"""
+    data: List[Any]
+    total: int
+    page: int
     limit: int
-    remaining: int
-    reset_in_seconds: int
-    window_seconds: int
+    total_pages: int
 
 
 class UploadResponse(BaseModel):
-    """File upload response."""
-    file_id: str
+    """File upload response"""
     filename: str
-    size_bytes: int
-    status: str
-    message: Optional[str] = None
-    analysis_job_id: Optional[str] = None
+    size: int
+    path: str
+    message: str
+
+
+class AnalysisDetailResponse(BaseModel):
+    """Detailed analysis response"""
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    land_record: LandRecordResponse
+    risk_level: str
+    fraud_probability: float
+    flags: List[str]
+    recommendation: Optional[str]
+    analyzed_by: Optional[str]
+    created_at: datetime
+    details: Optional[Dict[str, Any]] = None
+
+
+class StatisticsResponse(BaseModel):
+    """Statistics response"""
+    total_records: int
+    analyzed_records: int
+    pending_records: int
+    high_risk_count: int
+    medium_risk_count: int
+    low_risk_count: int
+    average_fraud_probability: float
+    recent_activity: List[Dict[str, Any]]
+
+
+class BatchUploadResponse(BaseModel):
+    """Batch upload response"""
+    total_files: int
+    successful: int
+    failed: int
+    files: List[Dict[str, Any]]
+    message: str

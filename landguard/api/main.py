@@ -1,124 +1,87 @@
 """
-Main FastAPI application for LandGuard.
+LandGuard API - Main FastAPI Application
 """
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.middleware.gzip import GZipMiddleware
 from contextlib import asynccontextmanager
+import logging
 
-from api.routes import health_router, auth_router, analysis_router, upload_router
-from api.middleware import (
-    SecurityHeadersMiddleware,
-    RequestLoggingMiddleware,
-    ErrorHandlingMiddleware
+from api.routes import auth, analysis, upload, health, statistics
+from api.middleware import setup_middleware
+from database.connection import engine, Base
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-from api.dependencies import audit_logger, rate_limiter
-from core.security.audit_logger import AuditLogger
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Lifespan context manager for startup and shutdown events.
-    """
+    """Application lifespan events"""
     # Startup
-    print("🚀 Starting LandGuard API...")
-    print("📊 Security features enabled")
-    print("✅ Ready to accept requests")
+    logger.info("Starting LandGuard API...")
+    
+    # Create database tables
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables created successfully")
+    except Exception as e:
+        logger.error(f"Error creating database tables: {e}")
     
     yield
     
     # Shutdown
-    print("🛑 Shutting down LandGuard API...")
-    # Cleanup rate limiter
-    rate_limiter.cleanup_all()
-    print("✅ Cleanup complete")
+    logger.info("Shutting down LandGuard API...")
 
 
-def create_app() -> FastAPI:
-    """
-    Create and configure FastAPI application.
-    
-    Returns:
-        Configured FastAPI application
-    """
-    app = FastAPI(
-        title="LandGuard API",
-        description="Land fraud detection and analysis API with advanced security features",
-        version="1.0.0",
-        docs_url="/docs",
-        redoc_url="/redoc",
-        openapi_url="/openapi.json",
-        lifespan=lifespan
-    )
-    
-    # Add CORS middleware
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["http://localhost:3000", "http://localhost:8000"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    
-    # Add custom middleware
-    app.add_middleware(ErrorHandlingMiddleware)
-    app.add_middleware(RequestLoggingMiddleware, audit_logger=audit_logger)
-    app.add_middleware(SecurityHeadersMiddleware)
-    
-    # Include routers
-    app.include_router(health_router)
-    app.include_router(auth_router)
-    app.include_router(analysis_router)
-    app.include_router(upload_router)
-    
-    # Root endpoint
-    @app.get("/")
-    async def root():
-        """Root endpoint with API information."""
-        return {
-            "name": "LandGuard API",
-            "version": "1.0.0",
-            "status": "operational",
-            "docs": "/docs",
-            "health": "/api/v1/health"
-        }
-    
-    # Custom exception handlers
-    @app.exception_handler(404)
-    async def not_found_handler(request: Request, exc):
-        """Handle 404 errors."""
-        return JSONResponse(
-            status_code=404,
-            content={
-                "error": "not_found",
-                "message": "The requested resource was not found",
-                "path": str(request.url.path)
-            }
-        )
-    
-    @app.exception_handler(500)
-    async def internal_error_handler(request: Request, exc):
-        """Handle 500 errors."""
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": "internal_server_error",
-                "message": "An unexpected error occurred"
-            }
-        )
-    
-    return app
+# Create FastAPI app
+app = FastAPI(
+    title="LandGuard API",
+    description="AI-Powered Land Fraud Detection System",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# CORS Configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Gzip Compression
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# Custom middleware
+setup_middleware(app)
+
+# Include routers
+app.include_router(health.router, prefix="/api", tags=["Health"])
+app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+app.include_router(statistics.router, prefix="/api/statistics", tags=["Statistics"])
+app.include_router(analysis.router, prefix="/api/analysis", tags=["Analysis"])
+app.include_router(upload.router, prefix="/api/upload", tags=["Upload"])
 
 
-# Create app instance
-app = create_app()
+@app.get("/")
+async def root():
+    """Root endpoint"""
+    return {
+        "message": "LandGuard API",
+        "version": "1.0.0",
+        "status": "running"
+    }
 
 
 if __name__ == "__main__":
     import uvicorn
-    
     uvicorn.run(
         "api.main:app",
         host="0.0.0.0",

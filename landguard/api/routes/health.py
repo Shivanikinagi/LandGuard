@@ -1,37 +1,38 @@
 """
-Health check endpoints.
+Health Check Routes
 """
 
-from datetime import datetime
 from fastapi import APIRouter, Depends
-from typing import Dict
+from sqlalchemy.orm import Session
+from database.connection import get_db
 
-from api.models.responses import HealthResponse
-from api.dependencies import check_rate_limit
-
-router = APIRouter(prefix="/api/v1", tags=["health"])
+router = APIRouter()
 
 
-@router.get("/health", response_model=HealthResponse)
+@router.get("/health")
 async def health_check():
-    """
-    Health check endpoint.
-    Returns system status and component health.
-    """
-    return HealthResponse(
-        status="healthy",
-        version="1.0.0",
-        timestamp=datetime.utcnow(),
-        checks={
-            "api": True,
-            "database": True,  # Add actual DB check when implemented
-            "security": True,
-            "analyzer": True
+    """Basic health check"""
+    return {
+        "status": "healthy",
+        "service": "landguard-api",
+        "version": "1.0.0"
+    }
+
+
+@router.get("/health/db")
+async def database_health(db: Session = Depends(get_db)):
+    """Database health check"""
+    try:
+        # Try to execute a simple query
+        db.execute("SELECT 1")
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "message": "Database connection is working"
         }
-    )
-
-
-@router.get("/ping")
-async def ping():
-    """Simple ping endpoint for basic connectivity check."""
-    return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "database": "disconnected",
+            "error": str(e)
+        }

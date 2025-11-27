@@ -1,0 +1,9 @@
+{
+  "record_id": "LAND_DEMO_001",
+  "hash": "818f04c4f8b8f4415251b8919500573c8ff6a423b414a96ab14127915762997d",
+  "algorithm": "sha256",
+  "created_at": "2025-11-27T02:49:08.559949+00:00",
+  "metadata": {
+    "type": "fraud_evidence"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "record_id": "LAND_DEMO_001",
+  "evidence_hash": "4a2d6e6d235d97daa81910879077f16565ad6a3c2d01a47da62fc2440ad273fd",
+  "evidence": {
+    "record_id": "LAND_DEMO_001",
+    "timestamp": "2025-11-27T02:31:49.407690+00:00",
+    "analysis_result": {
+      "is_fraudulent": true,
+      "risk_score": 87.5,
+      "confidence": 0.92,
+      "fraud_indicators": [
+        "Price deviation > 50%",
+        "Missing critical documents",
+        "Seller-buyer same name"
+      ]
+    },
+    "ml_predictions": {
+      "anomaly_score": 0.89,
+      "classifier_probability": 0.92,
+      "pattern_matches": 3
+    },
+    "documents": [
+      "deed.pdf",
+      "tax_receipt.pdf"
+    ],
+    "metadata": {
+      "version": "1.0",
+      "user_id": "demo_analyst"
+    }
+  },
+  "stored_at": "2025-11-27T02:31:49.420578",
+  "version": "1.0"
+}

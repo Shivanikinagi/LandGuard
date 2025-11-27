@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Dict, Any
 
 from statistical_analyzer import StatisticalAnalyzer
-from Analytics.analytics.geo_mapper import GeoMapper
+from geo_mapper import GeoMapper
 from network_analyzer import NetworkAnalyzer
 from time_series_analyzer import TimeSeriesAnalyzer
 

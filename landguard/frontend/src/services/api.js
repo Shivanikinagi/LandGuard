@@ -5,7 +5,18 @@
 import axios from 'axios'
 import { toast } from 'react-toastify'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+// Ensure the API base URL has the proper protocol and format
+let API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+if (API_BASE_URL) {
+  // Remove trailing slash if present
+  API_BASE_URL = API_BASE_URL.replace(/\/$/, '')
+  
+  // Add protocol if missing
+  if (!API_BASE_URL.startsWith('http://') && !API_BASE_URL.startsWith('https://')) {
+    API_BASE_URL = `http://${API_BASE_URL}`
+  }
+}
+
 const API_TIMEOUT = import.meta.env.VITE_API_TIMEOUT || 30000
 
 // Storage keys
@@ -23,20 +34,6 @@ const api = axios.create({
   },
 })
 
-// Request interceptor - Add auth token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
-)
-
 // Response interceptor - Handle errors
 api.interceptors.response.use(
   (response) => {
@@ -45,7 +42,8 @@ api.interceptors.response.use(
   (error) => {
     if (error.response) {
       // Server responded with error status
-      const { status, data } = error.response
+      const { status, data, headers } = error.response
+      console.error('API Error Response:', status, data, headers)
 
       switch (status) {
         case 401:
@@ -87,13 +85,32 @@ api.interceptors.response.use(
       return Promise.reject(error)
     } else if (error.request) {
       // Request made but no response
+      console.error('API Network Error:', error.request)
       toast.error('Network error. Please check your connection.')
       return Promise.reject(new Error('Network error'))
     } else {
       // Something else happened
+      console.error('API Unexpected Error:', error.message)
       toast.error('An unexpected error occurred.')
       return Promise.reject(error)
     }
+  }
+)
+
+// Request interceptor - Add auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+      console.log('API Request with token:', config.url, token.substring(0, 20) + '...')
+    } else {
+      console.log('API Request without token:', config.url)
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
   }
 )
 
@@ -198,12 +215,10 @@ export const download = async (url, filename) => {
     document.body.appendChild(link)
     link.click()
     link.parentNode.removeChild(link)
-    window.URL.revokeObjectURL(urlBlob)
-    
-    return true
   } catch (error) {
     throw error
   }
 }
 
+// Add default export
 export default api

@@ -1,295 +1,490 @@
-# 🔍 LandGuard - Land Record Fraud Detection System
+# 🏛️ LandGuard
 
-**Intelligent anomaly detection for land records and property transactions**
+AI-Powered Land Fraud Detection System
 
-LandGuard is an AI-powered fraud detection system that analyzes land records, ownership histories, and property transactions to identify suspicious patterns and potential fraud indicators.
+## 📋 Table of Contents
 
----
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Running the Application](#running-the-application)
+- [CLI Tool](#cli-tool)
+- [Project Structure](#project-structure)
+- [Available Scripts](#available-scripts)
+- [Environment Variables](#environment-variables)
+- [API Integration](#api-integration)
+- [Deployment](#deployment)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
-## 🌟 Features
+## ✨ Features
 
-- **🚨 Comprehensive Fraud Detection**
-  - Rapid ownership transfer detection
-  - Transaction party mismatch identification
-  - Duplicate land ID detection
-  - Large transfer flagging
-  - Cross-document conflict detection
-  - Chronological validation
-  - Evidence capture and reporting
+- 📊 **Interactive Dashboard** - Real-time statistics and visualizations
+- 🔍 **Land Record Management** - Search, view, and manage land records
+- 🎯 **Fraud Analysis** - AI-powered fraud detection and risk assessment
+- 📤 **Bulk Upload** - CSV/Excel file upload for batch processing
+- 📑 **Report Generation** - Generate PDF/Excel reports
+- 👥 **User Management** - Role-based access control (Admin, Analyst, Viewer)
+- 🔐 **Secure Authentication** - JWT-based authentication
+- 📱 **Responsive Design** - Works on desktop, tablet, and mobile
+- 🛡️ **Document Security** - Compression, encryption, and blockchain verification
+- 🌐 **Decentralized Storage** - IPFS integration for permanent document storage
 
-- **📄 Multi-Format Support**
-  - JSON structured data
-  - CSV files
-  - PDF documents (with table extraction)
-  - Scanned images (OCR)
+## 🛠️ Tech Stack
 
-- **💻 Modern CLI Interface**
-  - Single file analysis
-  - Batch processing
-  - Customizable rules via YAML config
-  - Rich terminal output
+- **Backend:** FastAPI, Python 3.9+
+- **Database:** PostgreSQL with SQLAlchemy ORM
+- **Frontend:** React 18.2.0, Vite 5.0.8, Material-UI 5.14.20
+- **Authentication:** JWT, OAuth2
+- **Storage:** IPFS (Pinata), PostgreSQL
+- **Security:** bcrypt, JWT, AES-256 encryption
+- **Blockchain:** Smart contracts (sandbox mode)
+- **Compression:** PCC (Pied Piper Compression) integration
 
-- **📊 Detailed Reporting**
-  - Severity-based issue classification
-  - Confidence scoring
-  - Evidence snippets
-  - Batch analysis summaries
+## 📦 Prerequisites
 
----
+Before you begin, ensure you have the following installed:
+
+- **Python** >= 3.9
+- **Node.js** >= 18.0.0 (LTS recommended)
+- **npm** >= 9.0.0 or **yarn** >= 1.22.0
+- **PostgreSQL** >= 13.0
+- **Git** (for version control)
+
+### Verify Installation
+
+```bash
+python --version  # Should show Python 3.9.x or higher
+node --version    # Should show v18.x.x or higher
+npm --version     # Should show 9.x.x or higher
+psql --version    # Should show PostgreSQL 13.x or higher
+```
 
 ## 🚀 Installation
 
-### Prerequisites
-- Python 3.8+
-- Tesseract OCR (for scanned documents)
+### Step 1: Clone the Repository
 
-### Install Dependencies
 ```bash
+# Clone the main project
+git clone https://github.com/yourusername/landguard.git
+cd landguard
+```
+
+### Step 2: Backend Setup
+
+```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On Windows
+venv\Scripts\activate
+# On Linux/Mac
+source venv/bin/activate
+
+# Install backend dependencies
 pip install -r requirements.txt
 ```
 
-### Install Tesseract (for OCR)
-**Windows:**
-```bash
-# Download installer from: https://github.com/UB-Mannheim/tesseract/wiki
-# Add to PATH: C:\Program Files\Tesseract-OCR
-```
-
-**Linux:**
-```bash
-sudo apt-get install tesseract-ocr
-```
-
-**Mac:**
-```bash
-brew install tesseract
-```
-
----
-
-## 📖 Quick Start
-
-### Analyze a Single File
-```bash
-python -m landguard.cli.main analyze path/to/land_record.json
-```
-
-### Batch Analysis
-```bash
-python -m landguard.cli.main batch path/to/records_dir/ --output batch_report.json
-```
-
-### Generate Config Template
-```bash
-python -m landguard.cli.main config-template --output my_config.yaml
-```
-
-### Analyze with Custom Config
-```bash
-python -m landguard.cli.main analyze record.json --config my_config.yaml --verbose
-```
-
----
-
-## 🔧 Configuration
-
-Create a custom configuration file to adjust detection thresholds:
-
-```yaml
-# landguard_config.yaml
-rapid_transfer_days: 180
-rapid_transfer_count: 2
-large_transfer_threshold: 10000000
-name_similarity_threshold: 85
-date_order_tolerance_days: 1
-```
-
----
-
-## 📝 Input Data Format
-
-### JSON Format
-```json
-{
-  "land_id": "LD-12345",
-  "owner_history": [
-    {
-      "owner_name": "John Smith",
-      "date": "2015-05-01",
-      "document_id": "DOC-001"
-    }
-  ],
-  "transactions": [
-    {
-      "tx_id": "TX-001",
-      "date": "2020-03-15",
-      "amount": 15000000,
-      "from_party": "John Smith",
-      "to_party": "Jane Doe"
-    }
-  ],
-  "property_area": 5000.0,
-  "registration_number": "REG-2015-001"
-}
-```
-
-### CSV Format
-```csv
-land_id,owner_name,owner_date,tx_id,tx_date,amount,from_party,to_party
-LD-12345,John Smith,2015-05-01,TX-001,2020-03-15,15000000,John Smith,Jane Doe
-```
-
----
-
-## 🚨 Detected Fraud Indicators
-
-### 1. Rapid Ownership Transfers
-**What:** Multiple ownership changes within a short time period  
-**Why Suspicious:** May indicate document forgery or shell company schemes  
-**Example:** 3 transfers in 60 days
-
-### 2. Party Mismatches
-**What:** Transaction "from" party doesn't match current owner  
-**Why Suspicious:** Invalid transfer or unauthorized transaction  
-**Example:** Alice owns land, but transaction shows Bob as seller
-
-### 3. Duplicate Land IDs
-**What:** Same land ID appears in multiple documents  
-**Why Suspicious:** Possible double-registration or forged documents  
-**Example:** LD-12345 in both file1.json and file2.pdf
-
-### 4. Large Transfers
-**What:** Transaction amounts significantly above threshold  
-**Why Suspicious:** Unusual activity requiring scrutiny  
-**Example:** 50M transfer when average is 5M
-
-### 5. Cross-Document Conflicts
-**What:** Different values for same land ID across files  
-**Why Suspicious:** Data tampering or administrative errors  
-**Example:** Property area 1000 sqm in doc1, 1500 sqm in doc2
-
-### 6. Time Order Violations
-**What:** Ownership dates not in chronological order  
-**Why Suspicious:** Backdated transfers or data entry errors  
-**Example:** Owner B dated before Owner A
-
-### 7. Missing Mandatory Fields
-**What:** Critical data fields are empty  
-**Why Suspicious:** Incomplete or manipulated records  
-**Example:** No land_id or owner_history
-
----
-
-## 📊 Sample Output
-
-```
-📊 Analysis Report
-─────────────────────────────────────────────────
-Record: LD-67890
-Confidence Score: 45%
-Issues Found: 2
-Highest Severity: high
-
-🚨 Detected Issues
-┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Type            ┃ Severity ┃ Message                  ┃
-┡━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ rapid_transfer  │ high     │ Ownership changed 2      │
-│                 │          │ times within 16 days     │
-│ party_mismatch  │ high     │ Transaction from party   │
-│                 │          │ doesn't match owner      │
-└─────────────────┴──────────┴──────────────────────────┘
-```
-
----
-
-## 🧪 Running Tests
+### Step 3: Frontend Setup
 
 ```bash
-# Run all tests
-pytest tests/
+# Navigate to frontend directory
+cd frontend
 
-# Run with coverage
-pytest tests/ --cov=landguard --cov-report=html
+# Install frontend dependencies
+npm install
 
-# Run specific test file
-pytest tests/test_analyzer.py -v
+# OR using yarn
+yarn install
+
+# Navigate back to root
+cd ..
 ```
 
----
+### Step 4: Database Setup
 
-## 🏗️ Project Structure
+```bash
+# Create database (adjust credentials as needed)
+createdb landguard
+
+# Run database migrations
+python database/init_db.py
+```
+
+### Step 5: Environment Configuration
+
+Create a `.env` file in the root directory:
+
+```env
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=landguard
+DB_USER=your_username
+DB_PASSWORD=your_password
+
+# JWT Configuration
+SECRET_KEY=your-secret-key-change-in-production
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# API Configuration
+HOST=localhost
+PORT=8000
+DEBUG=True
+
+# PCC Integration
+PCC_PATH=../pcc
+
+# IPFS Configuration (optional)
+PINATA_JWT=your_pinata_jwt_token
+```
+
+## 🏃 Running the Application
+
+### Backend Server
+
+```bash
+# Activate virtual environment
+# On Windows
+venv\Scripts\activate
+# On Linux/Mac
+source venv/bin/activate
+
+# Start backend server
+python api/main.py
+```
+
+The backend will be available at: **http://localhost:8000**
+
+API Documentation: **http://localhost:8000/docs**
+
+### Frontend Development Server
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Start development server
+npm run dev
+
+# OR with yarn
+yarn dev
+```
+
+The frontend will be available at: **http://localhost:5173**
+
+## 🛠 CLI Tool
+
+LandGuard includes a command-line interface for processing documents directly from the terminal:
+
+```bash
+# Process documents
+python cli/landguard_cli.py process documents/property_deed.pdf
+
+# Verify documents
+python cli/landguard_cli.py verify QmXyZ123AbC456DeF789GhI012JkLmNoPqRsTuVwXyZ123AbC4
+```
+
+See [CLI Documentation](cli/README.md) for more details.
+
+## 📁 Project Structure
 
 ```
 landguard/
-├── cli/
-│   └── main.py              # CLI interface
-├── core/
-│   ├── models.py            # Data models
-│   └── landguard/
-│       └── analyzer.py      # Fraud detection engine
-├── detector/
-│   └── extractors/          # File parsers
-│       ├── json_extractor.py
-│       ├── csv_extractor.py
-│       ├── pdf_extractor.py
-│       └── ocr_extractor.py
-├── tests/
-│   ├── test_analyzer.py     # Unit tests
-│   └── test_extractors.py
-├── data/
-│   └── samples/             # Sample data
-└── config.yaml              # Default config
+├── api/                  # FastAPI backend
+│   ├── main.py          # Application entry point
+│   ├── routes/          # API route handlers
+│   └── middleware.py    # Custom middleware
+├── database/            # Database models and utilities
+│   ├── models.py        # SQLAlchemy models
+│   ├── connection.py    # Database connection
+│   ├── auth.py          # Authentication utilities
+│   └── init_db.py       # Database initialization
+├── core/                # Core business logic
+│   ├── landguard/       # LandGuard core modules
+│   └── blockchain/      # Blockchain integration
+├── Blockchain/          # Blockchain components
+│   ├── blockchain/      # Smart contracts and handlers
+│   └── smart_contracts/ # Smart contract implementations
+├── cli/                 # Command-line interface
+│   ├── landguard_cli.py # Main CLI implementation
+│   └── README.md        # CLI documentation
+├── frontend/            # React frontend
+│   ├── src/
+│   │   ├── components/  # React components
+│   │   ├── services/    # API services
+│   │   └── hooks/       # Custom React hooks
+│   └── public/          # Static files
+├── uploads/             # Uploaded files (auto-created)
+├── processed/           # Processed files (auto-created)
+├── .env.example         # Environment variables template
+├── requirements.txt     # Python dependencies
+└── README.md            # This file
 ```
 
----
+## 📜 Available Scripts
 
-## 🔬 How It Works
+### Backend
 
-1. **File Ingestion** → Parse JSON/CSV/PDF/Image files
-2. **Data Extraction** → Convert to standardized `LandRecord` format
-3. **Normalization** → Clean dates, names, amounts
-4. **Rule Engine** → Run 7+ fraud detection rules
-5. **Evidence Collection** → Capture specific violations
-6. **Confidence Scoring** → Calculate overall trust score
-7. **Report Generation** → Output structured anomaly report
+```bash
+# Run backend server
+python api/main.py
 
----
+# Run with auto-reload (development)
+python api/main.py --debug
 
-## 🎯 Use Cases
+# Run tests
+python -m pytest tests/
 
-- **Government Land Registries** - Detect fraudulent property registrations
-- **Title Insurance Companies** - Validate ownership chains
-- **Legal Firms** - Due diligence for property transactions
-- **Banks** - Verify collateral for land-backed loans
-- **Anti-Corruption Agencies** - Identify suspicious patterns
+# Database migrations
+python database/init_db.py
+```
 
----
+### Frontend
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Run linting
+npm run lint
+```
+
+## ⚙️ Environment Variables
+
+### Backend
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DB_HOST` | Database host | `localhost` |
+| `DB_PORT` | Database port | `5432` |
+| `DB_NAME` | Database name | `landguard` |
+| `DB_USER` | Database user | `postgres` |
+| `DB_PASSWORD` | Database password | `postgres` |
+| `SECRET_KEY` | JWT secret key | `your-secret-key-change-in-production` |
+| `ALGORITHM` | JWT algorithm | `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiration | `30` |
+| `HOST` | Server host | `localhost` |
+| `PORT` | Server port | `8000` |
+| `DEBUG` | Debug mode | `True` |
+
+### Frontend
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_API_BASE_URL` | Backend API base URL | `http://localhost:8000/api` |
+| `VITE_API_TIMEOUT` | API request timeout (ms) | `30000` |
+| `VITE_APP_NAME` | Application name | `LandGuard` |
+
+## 🌐 API Integration
+
+### Backend Requirements
+
+The frontend requires the LandGuard backend API to be running. Ensure the backend is started before running the frontend.
+
+```bash
+# In a separate terminal, start the backend
+python api/main.py
+```
+
+### API Endpoints Used
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/auth/login` | POST | User authentication |
+| `/api/v1/land-records` | GET | Fetch land records |
+| `/api/v1/land-records/:id` | GET | Get record details |
+| `/api/v1/analysis` | GET | Fetch analysis results |
+| `/api/v1/statistics/overview` | GET | Get dashboard statistics |
+| `/api/v1/processing/process-document` | POST | Process documents through complete workflow |
+
+### Authentication
+
+The application uses JWT tokens for authentication:
+
+1. Login with credentials
+2. Token is stored in `localStorage`
+3. Token is sent in `Authorization` header for all API requests
+4. Token expires after 30 minutes (configurable)
+
+### Demo Credentials
+
+**Admin User:**
+- Username: `admin`
+- Password: `admin123`
+
+**Analyst User:**
+- Username: `analyst`
+- Password: `analyst123`
+
+**Viewer User:**
+- Username: `viewer`
+- Password: `viewer123`
+
+## 🚀 Deployment
+
+### Production Build
+
+```bash
+# Backend
+python api/main.py --host 0.0.0.0 --port 8000 --debug False
+
+# Frontend
+cd frontend
+npm run build
+# Serve the dist folder with your preferred web server
+```
+
+### Docker Deployment (Optional)
+
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
+```
+
+### Environment Variables for Production
+
+Update `.env` for production:
+
+```env
+SECRET_KEY=your-production-secret-key
+DEBUG=False
+HOST=0.0.0.0
+```
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Issue: Cannot connect to backend
+
+**Solution:**
+```bash
+# Check if backend is running
+curl http://localhost:8000/api/v1/health
+
+# Ensure correct API base URL in frontend .env
+VITE_API_BASE_URL=http://localhost:8000/api/v1
+```
+
+#### Issue: CORS errors
+
+**Solution:**
+Ensure backend CORS settings allow frontend origin:
+
+```python
+# In backend main.py
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+#### Issue: Database connection failed
+
+**Solution:**
+```bash
+# Check PostgreSQL service
+sudo systemctl status postgresql
+
+# Verify database credentials in .env
+# Try connecting manually
+psql -h localhost -p 5432 -U your_username -d landguard
+```
+
+#### Issue: Module not found errors
+
+**Solution:**
+```bash
+# Clear cache and reinstall
+pip install --no-cache-dir -r requirements.txt
+```
+
+### Debugging
+
+Enable verbose logging:
+
+```bash
+# Set DEBUG environment variable
+DEBUG=True python api/main.py
+```
+
+Check logs for errors:
+1. Backend logs in terminal
+2. Browser console (F12 → Console tab)
 
 ## 🤝 Contributing
 
-Contributions welcome! Areas for improvement:
+We welcome contributions! Please follow these steps:
 
-- Additional fraud detection rules
-- Machine learning-based anomaly scoring
-- Real-time monitoring dashboard
-- Integration with blockchain verification
-- Multi-language support for OCR
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
----
+### Code Style
+
+- Follow PEP 8 for Python code
+- Use ESLint for frontend code
+- Write meaningful commit messages
+- Add comments for complex logic
+
+### Before Submitting PR
+
+```bash
+# Run backend tests
+python -m pytest tests/
+
+# Run frontend linting
+cd frontend && npm run lint
+
+# Build to check for errors
+npm run build
+```
 
 ## 📄 License
 
-MIT License - See LICENSE file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
----
+## 👥 Authors
+
+- **Your Name** - *Initial work* - [YourGitHub](https://github.com/yourusername)
+
+## 🙏 Acknowledgments
+
+- FastAPI team for the excellent backend framework
+- React community for the frontend library
+- Material-UI for the component library
+- PostgreSQL team for the database
+- All contributors and open-source projects used
 
 ## 📞 Support
 
-- **Issues:** [GitHub Issues](https://github.com/yourusername/landguard/issues)
-- **Email:** support@landguard.example
-- **Docs:** [Full Documentation](https://docs.landguard.example)
+For support, email support@landguard.com or open an issue on GitHub.
+
+## 🔗 Links
+
+- [Documentation](https://landguard.com/docs)
+- [Live Demo](https://landguard.com)
+- [API Documentation](https://api.landguard.com/docs)
 
 ---
-
-**Built with ❤️ for safer property transactions**
+**Built with ❤️ by the LandGuard Team**

@@ -1,192 +1,307 @@
 """
-Authentication Module
-Password hashing, token generation, and user authentication
+Authentication Utilities
+Password hashing, JWT token generation, and API key management
 """
 
+import os
+import secrets
+import hashlib
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Dict, Any
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-import os
 from dotenv import load_dotenv
+from sqlalchemy.orm import Session
 
+# Load environment variables
 load_dotenv()
 
-# Password hashing configuration
+# Configuration
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+
+# Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# JWT configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here-change-in-production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+def hash_password(password: str) -> str:
+    """
+    Hash a password using bcrypt
+
+    Args:
+        password: Plain text password
+
+    Returns:
+        Hashed password
+    """
+    return pwd_context.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
-    Verify a plain password against a hashed password
-    
+    Verify a password against a hash
+
     Args:
-        plain_password: The plain text password
-        hashed_password: The hashed password from database
-        
+        plain_password: Plain text password
+        hashed_password: Hashed password
+
     Returns:
-        bool: True if password matches, False otherwise
+        True if password matches, False otherwise
     """
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def get_password_hash(password: str) -> str:
+def authenticate_user(db: Session, username: str, password: str):
     """
-    Hash a password using bcrypt
-    
+    Authenticate a user by username and password
+
     Args:
+        db: Database session
+        username: Username to authenticate
         password: Plain text password
-        
+
     Returns:
-        str: Hashed password
+        User object if authentication successful, None otherwise
     """
-    return pwd_context.hash(password)
+    from database.models import User  # Import here to avoid circular imports
+    
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        return None
+    if not verify_password(password, user.hashed_password):
+        return None
+    return user
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """
     Create a JWT access token
-    
+
     Args:
-        data: Dictionary containing token data (usually {"sub": username})
-        expires_delta: Optional expiration time delta
-        
+        data: Data to encode in the token
+        expires_delta: Token expiration time
+
     Returns:
-        str: Encoded JWT token
+        Encoded JWT token
     """
     to_encode = data.copy()
-    
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    
-    to_encode.update({"exp": expire})
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire, "type": "access"})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    
     return encoded_jwt
 
 
-def decode_access_token(token: str) -> Optional[str]:
+def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
     """
-    Decode and validate a JWT token
-    
+    Decode and verify a JWT access token
+
     Args:
-        token: JWT token string
-        
+        token: JWT access token to decode
+
     Returns:
-        Optional[str]: Username from token if valid, None otherwise
+        Decoded token data or None if invalid
     """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
+        # Check if it's an access token
+        if payload.get("type") != "access":
             return None
-        return username
+        return payload
     except JWTError:
         return None
 
 
 def create_refresh_token(data: dict) -> str:
     """
-    Create a JWT refresh token with longer expiration
-    
+    Create a JWT refresh token
+
     Args:
-        data: Dictionary containing token data
-        
+        data: Data to encode in the token
+
     Returns:
-        str: Encoded JWT refresh token
+        Encoded JWT refresh token
     """
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=7)  # 7 days for refresh token
-    to_encode.update({"exp": expire})
+    expire = datetime.utcnow() + timedelta(days=7)  # 7 days for refresh tokens
+    to_encode.update({"exp": expire, "type": "refresh"})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
-def verify_token(token: str) -> bool:
+def decode_refresh_token(token: str) -> Optional[Dict[str, Any]]:
     """
-    Verify if a token is valid
-    
+    Decode and verify a JWT refresh token
+
     Args:
-        token: JWT token string
-        
+        token: JWT refresh token to decode
+
     Returns:
-        bool: True if token is valid, False otherwise
+        Decoded token data or None if invalid
     """
-    return decode_access_token(token) is not None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # Check if it's a refresh token
+        if payload.get("type") != "refresh":
+            return None
+        return payload
+    except JWTError:
+        return None
 
 
-def authenticate_user(username: str, password: str, user) -> bool:
+def generate_password_reset_token(email: str) -> str:
     """
-    Authenticate a user with username and password
-    
+    Generate a password reset token
+
     Args:
-        username: Username
-        password: Plain text password
-        user: User object from database
-        
+        email: User's email address
+
     Returns:
-        bool: True if authentication successful, False otherwise
+        Password reset token
     """
-    if not user:
-        return False
-    if not verify_password(password, user.password_hash):
-        return False
-    return True
+    data = {
+        "sub": email,
+        "type": "password_reset"
+    }
+    expire = datetime.utcnow() + timedelta(hours=1)  # 1 hour for reset tokens
+    data.update({"exp": expire})
+    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def check_password_strength(password: str) -> tuple[bool, str]:
+def verify_password_reset_token(token: str) -> Optional[str]:
     """
-    Check if password meets strength requirements
-    
+    Verify a password reset token
+
     Args:
-        password: Plain text password
-        
+        token: Password reset token
+
     Returns:
-        tuple[bool, str]: (is_strong, message)
+        Email address if valid, None otherwise
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "password_reset":
+            return None
+        return payload.get("sub")
+    except JWTError:
+        return None
+
+
+def create_email_verification_token(email: str) -> str:
+    """
+    Generate an email verification token
+
+    Args:
+        email: User's email address
+
+    Returns:
+        Email verification token
+    """
+    data = {
+        "sub": email,
+        "type": "email_verification"
+    }
+    expire = datetime.utcnow() + timedelta(days=1)  # 24 hours for verification
+    data.update({"exp": expire})
+    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def verify_email_verification_token(token: str) -> Optional[str]:
+    """
+    Verify an email verification token
+
+    Args:
+        token: Email verification token
+
+    Returns:
+        Email address if valid, None otherwise
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "email_verification":
+            return None
+        return payload.get("sub")
+    except JWTError:
+        return None
+
+
+def generate_secure_random_string(length: int = 32) -> str:
+    """
+    Generate a cryptographically secure random string
+
+    Args:
+        length: Length of the random string
+
+    Returns:
+        Random string
+    """
+    return secrets.token_urlsafe(length)
+
+
+def validate_password_strength(password: str) -> tuple[bool, str]:
+    """
+    Validate password strength
+
+    Args:
+        password: Password to validate
+
+    Returns:
+        Tuple of (is_valid, error_message)
     """
     if len(password) < 8:
         return False, "Password must be at least 8 characters long"
-    
-    has_upper = any(c.isupper() for c in password)
-    has_lower = any(c.islower() for c in password)
-    has_digit = any(c.isdigit() for c in password)
-    has_special = any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password)
-    
-    if not (has_upper and has_lower and has_digit):
-        return False, "Password must contain uppercase, lowercase, and numbers"
-    
+    if not any(c.isupper() for c in password):
+        return False, "Password must contain at least one uppercase letter"
+    if not any(c.islower() for c in password):
+        return False, "Password must contain at least one lowercase letter"
+    if not any(c.isdigit() for c in password):
+        return False, "Password must contain at least one number"
+    if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
+        return False, "Password must contain at least one special character"
     return True, "Password is strong"
 
 
-def hash_api_key(api_key: str) -> str:
+def create_api_key(user_id: str, expires_delta: Optional[timedelta] = None) -> str:
     """
-    Hash an API key
-    
+    Create an API key for a user
+
     Args:
-        api_key: Plain API key
-        
+        user_id: User ID
+        expires_delta: Expiration time
+
     Returns:
-        str: Hashed API key
+        API key
     """
-    return get_password_hash(api_key)
+    data = {
+        "sub": user_id,
+        "type": "api_key"
+    }
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(days=365)  # 1 year default
+    data.update({"exp": expire})
+    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def verify_api_key(plain_api_key: str, hashed_api_key: str) -> bool:
+def verify_api_key(api_key: str) -> Optional[Dict[str, Any]]:
     """
     Verify an API key
-    
+
     Args:
-        plain_api_key: Plain API key
-        hashed_api_key: Hashed API key from database
-        
+        api_key: API key to verify
+
     Returns:
-        bool: True if API key matches, False otherwise
+        Decoded token data or None if invalid
     """
-    return verify_password(plain_api_key, hashed_api_key)
+    try:
+        payload = jwt.decode(api_key, SECRET_KEY, algorithms=[ALGORITHM])
+        # Check if it's an API key
+        if payload.get("type") != "api_key":
+            return None
+        return payload
+    except JWTError:
+        return None

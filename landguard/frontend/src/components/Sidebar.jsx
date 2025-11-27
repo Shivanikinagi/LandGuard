@@ -21,6 +21,7 @@ import {
   Assessment,
   People,
   Settings,
+  Description,
 } from '@mui/icons-material'
 import { useAuth } from '../hooks/useAuth'
 import { USER_ROLES } from '../utils/constants'
@@ -63,6 +64,12 @@ const menuItems = [
     icon: <People />,
     path: '/users',
     roles: [USER_ROLES.ADMIN],
+  },
+  {
+    text: 'Process Document',
+    icon: <Description />,
+    path: '/process-document',
+    roles: [USER_ROLES.ADMIN, USER_ROLES.ANALYST],
   },
 ]
 

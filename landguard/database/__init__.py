@@ -1,35 +1,40 @@
 """
 Database Package
-SQLAlchemy ORM for PostgreSQL
+Handles database connections, models, and operations
 """
 
-from .connection import (
-    engine,
-    Base,
-    SessionLocal,
-    get_db,
-    init_db,
-    check_db_connection
-)
+from .connection import Base, engine, SessionLocal, get_db, create_tables, check_db_connection
+from .models import User, LandRecord, AnalysisResult, AuditLog
 
-from .models import (
-    User,
-    LandRecord,
-    Analysis,
-    AuditLog
+from .auth import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    decode_access_token,
+    create_api_key,
+    verify_api_key
 )
 
 __all__ = [
     # Connection
-    'engine',
-    'Base',
-    'SessionLocal',
-    'get_db',
-    'init_db',
-    'check_db_connection',
+    "Base",
+    "engine",
+    "SessionLocal",
+    "get_db",
+    "create_tables",
+    "check_db_connection",
+    
     # Models
-    'User',
-    'LandRecord',
-    'Analysis',
-    'AuditLog',
+    "User",
+    "LandRecord",
+    "AnalysisResult",
+    "AuditLog",
+    
+    # Auth
+    "hash_password",
+    "verify_password",
+    "create_access_token",
+    "decode_access_token",
+    "create_api_key",
+    "verify_api_key"
 ]

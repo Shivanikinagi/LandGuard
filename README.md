@@ -1,36 +1,39 @@
-# 🚀 Pied Piper 2.0 — Universal AI-Powered Compression & Storage
+# 🚀 LandGuard & PCC - Advanced Document Processing & Compression System
 
-> **Advanced file compression with military-grade encryption and decentralized storage**
+> **Secure land document processing with AI-powered compression, military-grade encryption, and blockchain verification**
 
-**Phase 1 Complete** ✅ - Production-ready compression system with AES-256-GCM encryption and IPFS integration.
-
----
-
-## 🌟 What is Pied Piper 2.0?
-
-Pied Piper 2.0 is an intelligent file compression system that:
-- 🤖 **Compresses** your files using AI-powered algorithms
-- 🔒 **Encrypts** them with military-grade AES-256-GCM encryption
-- 🌐 **Stores** them on the decentralized IPFS network
-- 📦 **Packages** everything in a custom `.ppc` container format
-
-Perfect for secure file storage, sharing, and archiving!
+**Complete Integration Ready** ✅ - Fully integrated system combining LandGuard fraud detection with PCC compression and IPFS storage.
 
 ---
+## 🌟 What is LandGuard & PCC?
+
+LandGuard & PCC is an advanced document processing system that combines fraud detection with intelligent file compression:
+
+**LandGuard** provides:
+- 🕵️ **Fraud Detection** for land documents using AI-powered anomaly detection
+- 🔍 **Risk Analysis** to identify suspicious patterns in property transfers
+- 📋 **Audit Trail** with blockchain verification for tamper-proof records
+
+**PCC (Pied Piper Compression)** provides:
+- 🤖 **Intelligent Compression** using efficient algorithms
+- 🔒 **Military-Grade Encryption** with AES-256-GCM
+- 🌐 **Decentralized Storage** on the IPFS network
+- 📦 **Secure Packaging** in custom `.ppc` container format
+
+Perfect for secure land document processing, verification, and archival!---
 
 ## ✨ Key Features
 
 | Feature | Description |
 |---------|-------------|
-| 🤖 **AI-Powered Compression** | Intelligent compression with automatic fallback |
+| 🕵️ **AI Fraud Detection** | Detects anomalies in land documents |
 | 🔐 **Military-Grade Encryption** | AES-256-GCM with PBKDF2 key derivation |
 | 🌐 **IPFS Decentralized Storage** | Permanent storage via Pinata gateway |
+| ⛓️ **Blockchain Verification** | Tamper-proof audit trail on Polygon |
 | 📦 **Custom .ppc Format** | Metadata-rich container format |
 | 🎯 **Smart File Detection** | Automatic MIME type and category recognition |
 | 💻 **Modern CLI Interface** | Easy-to-use command line tool |
-
----
-
+| 🤖 **Autonomous Agents** | Coordinated document processing workflow |
 ## 📋 Prerequisites
 
 Before installing, make sure you have:
@@ -49,8 +52,17 @@ cd compression-
 ```
 
 ### Step 2: Navigate to the Project Directory
+The project consists of two main modules:
+- `pcc/` - The compression system
+- `landguard/` - The land document processing system
+
+Choose the module you want to work with:
 ```bash
+# For PCC compression system
 cd pcc
+
+# For LandGuard document processing
+cd landguard
 ```
 
 ### Step 3: Create Virtual Environment
@@ -91,14 +103,21 @@ You should see the help menu with available commands!
 
 ## 📖 Quick Start Guide
 
-### 🎯 Example 1: Compress Your First File
+The project offers two main functionalities:
 
-**Step 1:** Create a test file
+### 🎯 Option 1: PCC Compression System
+
+**Step 1:** Navigate to the PCC directory
 ```bash
-echo "Hello, Pied Piper!" > test.txt
+cd pcc
 ```
 
-**Step 2:** Compress and encrypt it
+**Step 2:** Create a test file
+```bash
+echo "Hello, LandGuard!" > test.txt
+```
+
+**Step 3:** Compress and encrypt it
 ```bash
 python main.py pack test.txt --password mySecurePassword123
 ```
@@ -109,20 +128,30 @@ python main.py pack test.txt --password mySecurePassword123
 - ✅ Uploaded to IPFS
 - ✅ Saved as `test.txt.ppc`
 
-**Expected Output:**
-```
-✅ Packing: test.txt
-📊 Read 20 bytes
-🔍 Detected: text (text/plain)
-📦 Compressed with: huffman → 15 bytes
-🔒 Encrypted with AES-256-GCM
-💾 Created: test.txt.ppc
-📈 Compression Ratio: 1.33x (25% smaller)
-🌐 IPFS Link: https://gateway.pinata.cloud/ipfs/Qm...
+### 🏛️ Option 2: LandGuard Document Processing
+
+**Step 1:** Navigate to the LandGuard directory
+```bash
+cd landguard
 ```
 
----
+**Step 2:** Create a sample land document
+```bash
+echo "Property Address: 123 Main St" > sample_land_doc.txt
+```
 
+**Step 3:** Process the document through the full workflow
+```bash
+python cli/landguard_cli.py process sample_land_doc.txt --password mySecurePassword123
+```
+
+**What happens:**
+- ✅ Document is analyzed for fraud/anomalies
+- ✅ Compressed using PCC system
+- ✅ Encrypted with your password
+- ✅ Uploaded to IPFS
+- ✅ Registered on the blockchain
+- ✅ Audit trail created
 ### 🔓 Example 2: Decompress Your File
 
 **Restore the original file:**
@@ -163,13 +192,22 @@ python main.py info test.txt.ppc
 
 ## 📚 Command Reference
 
-### Main Commands
+The project provides two distinct command-line interfaces:
+
+### PCC System Commands (`pcc/main.py`)
 
 | Command | Purpose | Usage |
 |---------|---------|-------|
 | `pack` | Compress, encrypt & upload file | `python main.py pack <file> -p <password>` |
 | `unpack` | Decrypt & decompress file | `python main.py unpack <file.ppc> -p <password>` |
 | `info` | Display file metadata | `python main.py info <file.ppc>` |
+
+### LandGuard Commands (`landguard/cli/landguard_cli.py`)
+
+| Command | Purpose | Usage |
+|---------|---------|-------|
+| `process` | Process documents through complete workflow | `python landguard_cli.py process <files> --password <password>` |
+| `verify` | Verify document authenticity via CID | `python landguard_cli.py verify <cid>` |
 
 ### Command Options
 
@@ -445,6 +483,7 @@ python main.py info document.pdf.ppc
 
 ## 🏗️ Technical Architecture
 
+The project consists of two main modules with distinct responsibilities:
 ### System Components
 
 ```
@@ -473,8 +512,29 @@ pcc/
         └── bpe_compressor.py  # 📊 Byte Pair Encoding
 ```
 
+### LandGuard Module
+
+```
+landguard/
+├── cli/
+│   └── landguard_cli.py   # 🎯 Main CLI interface
+├── agents/
+│   ├── orchestrator.py    # 🤖 Workflow coordination
+│   ├── anomaly_detection_agent.py  # 🕵️ Fraud detection
+│   ├── compression_agent.py        # 🗜️ Compression coordination
+│   └── storage_agent.py            # 🌐 Storage coordination
+├── core/
+│   └── landguard/
+│       └── compression_bridge.py   # 🌉 Integration with PCC
+├── Blockchain/
+│   └── blockchain integration     # ⛓️ Smart contracts & audit trail
+└── api/
+    └── FastAPI backend            # 🌐 REST API interface
+```
+
 ### How Components Work Together
 
+**PCC System:**
 1. **CLI Layer** (`main.py`, `cli/main.py`)
    - Handles user input and commands
    - Provides interactive menu interface
@@ -505,6 +565,29 @@ pcc/
    - Returns permanent content-addressed links
    - Handles upload failures gracefully
 
+**LandGuard System:**
+1. **CLI Layer** (`cli/landguard_cli.py`)
+   - Processes user commands for document workflow
+   - Coordinates with autonomous agents
+
+2. **Agent Layer** (`agents/`)
+   - **Orchestrator**: Coordinates the complete workflow
+   - **Anomaly Detection Agent**: Analyzes documents for fraud
+   - **Compression Agent**: Manages PCC integration
+   - **Storage Agent**: Handles IPFS and blockchain storage
+
+3. **Integration Layer** (`core/landguard/compression_bridge.py`)
+   - Bridges LandGuard with PCC compression system
+   - Handles encryption and packaging of documents
+
+4. **Blockchain Layer** (`Blockchain/`)
+   - Registers documents on Polygon blockchain
+   - Maintains tamper-proof audit trail
+
+5. **API Layer** (`api/`)
+   - Provides RESTful interface for web applications
+   - Integrates with frontend dashboard
+
 ### Intelligent Fallback System
 
 The system has multiple fallback layers to ensure reliability:
@@ -530,9 +613,6 @@ Store Original Data (no compression)
 - ✅ System works even if AI models unavailable
 - ✅ Graceful degradation of features
 - ✅ Always produces valid .ppc files
-
----
-
 ## 🔬 Compression Algorithms
 
 ### 1. Huffman Coding (Text Files)
@@ -581,42 +661,41 @@ Savings:   98% compression with acceptable quality
 
 ## 📊 Development Status
 
-### ✅ Phase 1: Core System (COMPLETE)
+### ✅ PCC System: Core Compression (COMPLETE)
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| CLI Interface | ✅ Complete | Typer-based with rich output |
+| CLI Interface | ✅ Complete | Command-line interface |
 | File Type Detection | ✅ Complete | MIME type and category detection |
 | AES-256-GCM Encryption | ✅ Complete | Military-grade security |
 | PPC Container Format | ✅ Complete | Metadata-rich packaging |
 | IPFS Integration | ✅ Complete | Pinata gateway upload |
 | Huffman Text Compression | ✅ Complete | 30-50% text compression |
-| VAE Image Compression | ⚠️ Partial | Model trained, debugging in progress |
 | Error Handling | ✅ Complete | Comprehensive fallback system |
 
-### 🚧 Phase 2: Enhancement (IN PROGRESS)
+### ✅ LandGuard System: Document Processing (COMPLETE)
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| CLI Interface | ✅ Complete | LandGuard command-line interface |
+| Anomaly Detection | ✅ Complete | AI-powered fraud detection |
+| Autonomous Agents | ✅ Complete | Coordinated workflow processing |
+| PCC Integration | ✅ Complete | Compression & encryption bridge |
+| IPFS Storage | ✅ Complete | Decentralized document storage |
+| Blockchain Registration | ✅ Complete | Polygon network integration |
+| Audit Trail | ✅ Complete | Tamper-proof record keeping |
+
+### 🚧 Enhanced Build: Future Development (PLANNED)
 
 | Feature | Status | Target |
 |---------|--------|--------|
-| Video Compression | 🔄 Planned | Neural Video Codec |
-| Audio Compression | 🔄 Planned | Wavelet-based compression |
-| Image Decompression Fix | 🐛 Debugging | Resolve 0-byte output issue |
+| AI-Powered Compression | 🔄 In Progress | Neural network compression |
+| Video Compression | 📋 Planned | Neural Video Codec |
+| Audio Compression | 📋 Planned | Wavelet-based compression |
 | Batch Processing | 📋 Planned | Process multiple files at once |
 | Progress Bars | 📋 Planned | Visual feedback for large files |
 | Web Interface | 💡 Future | Browser-based UI |
-
-### 🔮 Phase 3: Advanced Features (PLANNED)
-
-- [ ] Custom model training interface
-- [ ] Compression quality presets (fast/balanced/maximum)
-- [ ] Deduplication for similar files
-- [ ] Compression statistics dashboard
-- [ ] API for programmatic access
-- [ ] Docker containerization
-- [ ] Cloud deployment options
-
----
-
+| Mobile App | 💡 Future | iOS/Android applications |
 ## ❓ Troubleshooting
 
 ### Common Issues and Solutions
@@ -674,22 +753,24 @@ python --version
 
 ## 🤝 Contributing
 
-We welcome contributions! Here's how you can help:
-
+We welcome contributions to both the PCC compression system and the LandGuard document processing system! Here's how you can help:
 ### Ways to Contribute
 
 1. **Report Bugs** 🐛
    - Open an issue on GitHub
    - Include error messages and steps to reproduce
+   - Specify which module (PCC or LandGuard) has the issue
 
 2. **Suggest Features** 💡
    - Share ideas for new compression algorithms
-   - Propose UI/UX improvements
+   - Propose fraud detection improvements
+   - Suggest UI/UX improvements
 
 3. **Submit Code** 💻
    - Fork the repository
    - Create a feature branch
    - Submit a pull request
+   - Ensure changes work for both PCC and LandGuard modules
 
 4. **Improve Documentation** 📚
    - Fix typos or unclear instructions
@@ -697,10 +778,29 @@ We welcome contributions! Here's how you can help:
    - Translate documentation
 
 ### Development Setup
+
+For PCC System:
 ```bash
 # Clone repository
 git clone https://github.com/Parthkk90/compression-.git
 cd compression-/pcc
+
+# Install development dependencies
+pip install -r requirements.txt
+pip install pytest black flake8
+
+# Run tests
+pytest tests/
+
+# Format code
+black .
+```
+
+For LandGuard System:
+```bash
+# Clone repository
+git clone https://github.com/Parthkk90/compression-.git
+cd compression-/landguard
 
 # Install development dependencies
 pip install -r requirements.txt
@@ -761,28 +861,34 @@ Special thanks to:
 ## 🎯 Project Roadmap
 
 ### Q1 2025
-- ✅ Core compression system
-- ✅ AES encryption integration
-- ✅ IPFS storage support
-- ✅ CLI interface
+- ✅ Core compression system (PCC)
+- ✅ AES encryption integration (PCC)
+- ✅ IPFS storage support (PCC)
+- ✅ CLI interface (PCC)
+- ✅ Land document fraud detection (LandGuard)
+- ✅ Autonomous agent workflow (LandGuard)
+- ✅ Blockchain integration (LandGuard)
 
 ### Q2 2025
-- 🔄 Fix image decompression bug
-- 🔄 Implement video compression
-- 🔄 Add audio compression
-- 🔄 Web interface prototype
+- 🔄 Fix image decompression bug (PCC)
+- 🔄 Implement video compression (PCC)
+- 🔄 Add audio compression (PCC)
+- 🔄 Web interface prototype (Both)
+- 🔄 Advanced anomaly detection (LandGuard)
 
 ### Q3 2025
-- 📋 Batch processing
-- 📋 Compression quality presets
-- 📋 API development
-- 📋 Docker support
+- 📋 Batch processing (PCC)
+- 📋 Compression quality presets (PCC)
+- 📋 API development (Both)
+- 📋 Docker support (Both)
+- 📋 Multi-language support (Both)
 
 ### Q4 2025
-- 💡 Cloud deployment
-- 💡 Mobile app
-- 💡 Enterprise features
-- 💡 Performance optimization
+- 💡 Cloud deployment (Both)
+- 💡 Mobile app (LandGuard)
+- 💡 Enterprise features (Both)
+- 💡 Performance optimization (Both)
+- 💡 Machine learning enhancements (Both)
 
 ---
 
@@ -790,12 +896,11 @@ Special thanks to:
 
 ## ⭐ Star This Project!
 
-If you find Pied Piper 2.0 useful, please give it a star on GitHub!
+If you find LandGuard & PCC useful, please give it a star on GitHub!
 
-**Built with ❤️ by the Pied Piper Team**
+**Built with ❤️ by the LandGuard & PCC Team**
 
-*Making the world a more compressed place, one file at a time.*
-
+*Securing land documents and compressing data, one file at a time.*
 ---
 
 **Version:** 2.0.0 | **Last Updated:** November 2025

@@ -9,19 +9,82 @@ from pathlib import Path
 from typing import Optional, Dict, Any, Tuple
 import json
 
-# Add PCC to path
+# Add PCC to path - ensure this happens before any imports
+# PCC is in the parent directory of landguard
 pcc_path = Path(__file__).parent.parent.parent.parent / "pcc"
-if str(pcc_path) not in sys.path:
-    sys.path.insert(0, str(pcc_path))
+pcc_path_str = str(pcc_path.resolve())
+
+# Ensure PCC path is in sys.path
+if pcc_path_str not in sys.path:
+    sys.path.insert(0, pcc_path_str)
+
+# Import PCC modules with error handling
+PCC_AVAILABLE = False
+encrypt_data = None
+decrypt_data = None
+create_ppc_file = None
+read_ppc_file = None
+detect_file_type = None
+compress_file = None
+upload_to_ipfs = None
 
 try:
+    # Import modules explicitly
     from crypto.aes import encrypt_data, decrypt_data
     from core.ppc_format import create_ppc_file, read_ppc_file
     from detector.file_type import detect_file_type
     from compressors.compressor import compress_file
     from storage.ipfs_client import upload_to_ipfs
+    PCC_AVAILABLE = True
 except ImportError as e:
     print(f"Warning: PCC modules not available: {e}")
+    # Try fallback imports for demo
+    try:
+        import importlib.util
+        
+        # Import ppc_format
+        ppc_format_path = os.path.join(pcc_path_str, "core", "ppc_format.py")
+        if os.path.exists(ppc_format_path):
+            spec = importlib.util.spec_from_file_location("ppc_format", ppc_format_path)
+            ppc_format_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(ppc_format_module)
+            create_ppc_file = ppc_format_module.create_ppc_file
+            read_ppc_file = ppc_format_module.read_ppc_file
+        
+        # Import crypto.aes
+        aes_path = os.path.join(pcc_path_str, "crypto", "aes.py")
+        if os.path.exists(aes_path):
+            spec = importlib.util.spec_from_file_location("aes", aes_path)
+            aes_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(aes_module)
+            encrypt_data = aes_module.encrypt_data
+            decrypt_data = aes_module.decrypt_data
+            
+        # Import detector.file_type
+        file_type_path = os.path.join(pcc_path_str, "detector", "file_type.py")
+        if os.path.exists(file_type_path):
+            spec = importlib.util.spec_from_file_location("file_type", file_type_path)
+            file_type_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(file_type_module)
+            detect_file_type = file_type_module.detect_file_type
+            
+        # Import compressors.compressor
+        compressor_path = os.path.join(pcc_path_str, "compressors", "compressor.py")
+        if os.path.exists(compressor_path):
+            spec = importlib.util.spec_from_file_location("compressor", compressor_path)
+            compressor_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(compressor_module)
+            compress_file = compressor_module.compress_file
+            
+        PCC_AVAILABLE = True
+        print("DEBUG: All PCC modules imported successfully using fallback method")
+    except Exception as e2:
+        print(f"Failed to import PCC modules using fallback: {e2}")
+        PCC_AVAILABLE = False
+
+def ensure_pcc_available():
+    """Ensure PCC modules are available"""
+    return PCC_AVAILABLE
 
 
 class CompressionBridge:
@@ -38,15 +101,12 @@ class CompressionBridge:
             password: Encryption password for .ppc files
         """
         self.password = password
-        self.pcc_available = self._check_pcc_availability()
+        # Ensure PCC is available
+        self.pcc_available = ensure_pcc_available()
     
     def _check_pcc_availability(self) -> bool:
         """Check if PCC modules are available"""
-        try:
-            from crypto.aes import encrypt_data
-            return True
-        except ImportError:
-            return False
+        return ensure_pcc_available()
     
     def compress_and_encrypt(
         self,
@@ -75,19 +135,24 @@ class CompressionBridge:
             
             # Detect file type
             file_info = detect_file_type(input_path)
+            print(f"DEBUG: File info - {file_info}")  # Debug line
             
             # Compress data using actual PCC compression
             compressed_data, model_used, compressed_size = compress_file(input_path, file_info)
             compression_ratio = len(data) / compressed_size if compressed_size > 0 else 1.0
             
             # Encrypt data
-            encrypted_data = encrypt_data(compressed_data, self.password)
+            encrypted_result = encrypt_data(compressed_data, self.password)
+            # Extract just the ciphertext bytes
+            encrypted_data = encrypted_result["ciphertext"]
+            print(f"DEBUG: encrypt_data returned type: {type(encrypted_data)}")
+            print(f"DEBUG: encrypt_data returned: {encrypted_data}")
             
             # Prepare metadata
             ppc_metadata = {
                 "original_filename": Path(input_path).name,
-                "original_mime_type": file_info.get("mime_type", "application/octet-stream"),
-                "file_type": file_info.get("category", "unknown"),
+                "original_mime_type": file_info.get("mime", "application/octet-stream"),
+                "file_type": file_info.get("type", "unknown"),
                 "original_size_bytes": len(data),
                 "compressed_size_bytes": compressed_size,
                 "compression_ratio": compression_ratio,
@@ -104,6 +169,11 @@ class CompressionBridge:
                 output_path = f"{input_path}.ppc"
             
             # Create .ppc file
+            print(f"DEBUG: About to call create_ppc_file")
+            print(f"DEBUG: encrypted_data type: {type(encrypted_data)}")
+            print(f"DEBUG: ppc_metadata: {ppc_metadata}")
+            print(f"DEBUG: output_path: {output_path}")
+            print(f"DEBUG: create_ppc_file function: {create_ppc_file}")
             create_ppc_file(encrypted_data, ppc_metadata, output_path)
             
             return True, output_path, ppc_metadata

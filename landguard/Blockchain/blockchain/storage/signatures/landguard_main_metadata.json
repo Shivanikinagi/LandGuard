@@ -1,8 +1,0 @@
-{
-  "key_id": "landguard_main",
-  "created_at": "2025-11-27T02:23:53.274824",
-  "algorithm": "RSA",
-  "key_size": 2048,
-  "private_key_path": "blockchain\\storage\\signatures\\landguard_main_private.pem",
-  "public_key_path": "blockchain\\storage\\signatures\\landguard_main_public.pem"
-}

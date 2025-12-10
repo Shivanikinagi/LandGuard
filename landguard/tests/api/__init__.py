@@ -1,3 +1,0 @@
-"""
-API tests for LandGuard.
-"""

@@ -1,9 +1,0 @@
-[build-system]
-requires = ["setuptools>=45", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "compression-project"
-version = "0.1.0"
-description = "Compression and LandGuard projects"
-requires-python = ">=3.8"

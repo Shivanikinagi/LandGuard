@@ -1,0 +1,36 @@
+{
+  "name": "landguard-blockchain",
+  "version": "1.0.0",
+  "description": "LandGuard Blockchain Smart Contracts",
+  "main": "index.js",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "deploy:amoy": "node final-deploy.js",
+    "verify": "npx hardhat verify",
+    "test": "npx hardhat test",
+    "accounts": "npx hardhat accounts",
+    "balance": "node check-balance.js",
+    "faucet": "npx hardhat faucet",
+    "generate-wallet": "node scripts/generate-wallet.js",
+    "verify-setup": "node scripts/verify-setup.js",
+    "example": "node example.js"
+  },
+  "keywords": [
+    "polygon",
+    "smart-contracts",
+    "solidity",
+    "landguard"
+  ],
+  "author": "LandGuard Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "hardhat": "^3.0.16"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "ethers": "^6.8.0"
+  },
+  "type": "module"
+}

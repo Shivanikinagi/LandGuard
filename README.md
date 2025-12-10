@@ -217,6 +217,13 @@ python main.py info <ppc_file>
 ✅ **No Password Storage** - Password never saved anywhere  
 ✅ **Key Stretching** - PBKDF2 makes cracking extremely slow
 
+### Blockchain Verification
+
+✅ **Immutable Records** - All documents registered on Polygon Mumbai testnet  
+✅ **Transparent Verification** - Transactions visible on [PolygonScan Explorer](https://mumbai.polygonscan.com/)  
+✅ **Decentralized Storage** - IPFS ensures permanent document availability  
+✅ **Tamper-Evident** - Any modification breaks the cryptographic chain
+
 ---
 
 ## 🌐 IPFS Integration

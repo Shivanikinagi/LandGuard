@@ -2,8 +2,6 @@
 
 import cbor2
 from typing import Dict, Any
-import json
-import struct
 
 PPC_MAGIC = b"PPCv2"
 
@@ -17,12 +15,11 @@ class PPCFile:
             "magic_number": PPC_MAGIC.decode(),
             "version": "1.0",
             "original_size_bytes": len(self.original_data),
-            "compressed_size_bytes": len(self.original_data),  # placeholder
+            "compressed_size_bytes": len(self.original_data),
             "compression_ratio": 1.0,
             **self.metadata
         }
 
-        # In Phase 2: self.original_data will be compressed
         return cbor2.dumps({
             "header": header,
             "payload": self.original_data
@@ -50,18 +47,18 @@ def create_ppc_file(encrypted_data: bytes, metadata: Dict[str, Any], output_path
         f.write(packed_data)
 
 
-def read_ppc_file(ppc_path: str) -> tuple:
+def read_ppc_file(ppc_path: str) -> dict:
     """
-    Read a .ppc file and return the encrypted data and metadata
+    Read a .ppc file and return the data and metadata
     
     Args:
         ppc_path: Path to the .ppc file
         
     Returns:
-        Tuple of (encrypted_data, metadata)
+        Dictionary with 'data' and 'header' keys
     """
     with open(ppc_path, "rb") as f:
         raw_data = f.read()
     
     unpacked = PPCFile.unpack(raw_data)
-    return unpacked["data"], unpacked["header"]
+    return unpacked  # Returns dict with 'data' and 'header' keys

@@ -1,0 +1,9 @@
+Land Document Sample
+
+Property Address: 123 Main Street, Anytown, ST 12345
+Owner: John Doe
+Parcel Number: 123-456-789
+Lot Size: 0.5 acres
+Zoning: Residential
+
+This is a sample land document for demonstration purposes.

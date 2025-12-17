@@ -80,30 +80,30 @@ class LandGuardCLI:
         
     def print_item(self, text):
         """Print a bulleted item"""
-        print(f"• {text}")
+        print(f"* {text}")
         
     def print_success(self, text):
         """Print a success message"""
-        print(f"✅ {text}")
+        print(f"SUCCESS: {text}")
         
     def print_warning(self, text):
         """Print a warning message"""
-        print(f"⚠️ {text}")
+        print(f"WARNING: {text}")
         
     def print_error(self, text):
         """Print an error message"""
-        print(f"❌ {text}")
+        print(f"ERROR: {text}")
         
     def print_security(self, text):
         """Print a security-related message"""
-        print(f"🔒 {text}")
+        print(f"SECURITY: {text}")
         
     def process_documents(self, file_paths, password=None):
         """Process documents through the complete LandGuard workflow"""
-        self.print_header("🚀 LANDGUARD WORKFLOW STARTED")
+        self.print_header("LANDGUARD WORKFLOW STARTED")
         
         # STEP 1: FILE UPLOAD
-        self.print_section("📄 STEP 1: FILE UPLOAD")
+        self.print_section("STEP 1: FILE UPLOAD")
         
         # Validate files exist
         valid_files = []
@@ -122,7 +122,7 @@ class LandGuardCLI:
         self.print_success(f"Uploaded {len(valid_files)} files successfully")
         
         # STEP 2: ANOMALY DETECTION
-        self.print_section("🔍 STEP 2: ANOMALY DETECTION")
+        self.print_section("STEP 2: ANOMALY DETECTION")
         
         # Simulate anomaly detection
         anomalies = []
@@ -146,7 +146,7 @@ class LandGuardCLI:
         self.print_item("VALID: All documents properly signed and dated")
         
         if anomalies:
-            self.print_section("⚠️ ANOMALIES FOUND")
+            self.print_section("ANOMALIES FOUND")
             for anomaly in anomalies:
                 self.print_error(anomaly)
             risk_score = min(risk_score, 10.0)
@@ -156,7 +156,7 @@ class LandGuardCLI:
         self.print_item(f"Risk Score: {risk_score}/10 ({'HIGH RISK' if risk_score > 7 else 'MEDIUM' if risk_score > 4 else 'LOW'})")
         
         # STEP 3: COMPRESSION
-        self.print_section("🗜️ STEP 3: COMPRESSION")
+        self.print_section("STEP 3: COMPRESSION")
         
         # Get total original size
         total_original_size = sum(f.stat().st_size for f in valid_files)
@@ -171,7 +171,7 @@ class LandGuardCLI:
         self.print_success("Compression successful")
         
         # STEP 4: ENCRYPTION
-        self.print_section("🔐 STEP 4: ENCRYPTION")
+        self.print_section("STEP 4: ENCRYPTION")
         
         self.print_item("Encryption: AES-256-GCM")
         self.print_item("Key derivation: PBKDF2 with 100,000 iterations")
@@ -179,7 +179,7 @@ class LandGuardCLI:
         self.print_success("Encryption and signing complete")
         
         # STEP 5: PPC FILE CREATION
-        self.print_section("📦 STEP 5: PPC FILE CREATION")
+        self.print_section("STEP 5: PPC FILE CREATION")
         
         # Read file contents
         file_contents = b""
@@ -232,7 +232,7 @@ class LandGuardCLI:
             self.print_success(f"PPC package created: {len(file_contents) / (1024*1024):.1f} MB")
         
         # STEP 6: IPFS UPLOAD
-        self.print_section("🌐 STEP 6: IPFS UPLOAD")
+        self.print_section("STEP 6: IPFS UPLOAD")
         
         # Generate a fake CID for demo purposes
         import hashlib
@@ -247,7 +247,7 @@ class LandGuardCLI:
         self.print_success(f"IPFS CID: {fake_cid}")
         
         # STEP 7: BLOCKCHAIN REGISTRATION
-        self.print_section("⛓️ STEP 7: BLOCKCHAIN REGISTRATION")
+        self.print_section("STEP 7: BLOCKCHAIN REGISTRATION")
         
         # Generate a fake transaction hash for demo purposes
         fake_tx_hash = f"0x{secrets.token_hex(32)}"
@@ -259,7 +259,7 @@ class LandGuardCLI:
         self.print_success("Blockchain proof stored permanently")
         
         # STEP 8: AUDIT RECORD
-        self.print_section("📋 STEP 8: AUDIT RECORD")
+        self.print_section("STEP 8: AUDIT RECORD")
         
         # Generate a fake audit record ID
         fake_audit_id = f"AUD-{datetime.now().strftime('%Y-%m')}-{secrets.randbelow(10000):04d}"
@@ -296,21 +296,21 @@ class LandGuardCLI:
             print(f"Warning: Failed to log audit event: {e}")
         
         # FINAL SUMMARY
-        self.print_header("✅ WORKFLOW COMPLETE")
+        self.print_header("WORKFLOW COMPLETE")
         
         # Generate property ID based on first file name
         property_id = f"LD-{valid_files[0].stem.upper()}"[:20]
         
-        print(f"\n📋 FINAL SUMMARY:")
+        print(f"\nFINAL SUMMARY:")
         self.print_item(f"Property: {property_id}")
         status = "HIGH RISK" if risk_score > 7 else "MEDIUM RISK" if risk_score > 4 else "CLEAN"
-        self.print_item(f"Status: {'❌' if risk_score > 7 else '⚠️' if risk_score > 4 else '✅'} {status}")
+        self.print_item(f"Status: {'ERROR' if risk_score > 7 else 'WARNING' if risk_score > 4 else 'SUCCESS'} {status}")
         self.print_item(f"Risk Level: {risk_score:.1f}/10")
-        self.print_item("Storage: 🔒 Secured on blockchain")
+        self.print_item("Storage: SECURITY Secured on blockchain")
         self.print_item(f"Verification CID: {fake_cid}")
         self.print_item(f"Blockchain Proof: {fake_tx_hash}")
         
-        print(f"\n🔍 VERIFICATION COMMAND:")
+        print(f"\nVERIFICATION COMMAND:")
         print(f"landguard verify {fake_cid}")
         
         # Generate a simple report file
@@ -337,7 +337,7 @@ class LandGuardCLI:
     
     def verify_document(self, cid):
         """Verify a document using its CID"""
-        self.print_header("🔍 DOCUMENT VERIFICATION")
+        self.print_header("DOCUMENT VERIFICATION")
         
         self.print_item(f"Verifying CID: {cid}")
         
@@ -347,9 +347,9 @@ class LandGuardCLI:
         
         # For demo purposes, we'll assume all CIDs are valid
         self.print_success("Document verified successfully!")
-        self.print_item("✅ IPFS: Content available")
-        self.print_item("✅ Blockchain: Registration confirmed")
-        self.print_item("✅ Integrity: Document unchanged")
+        self.print_item("SUCCESS: IPFS: Content available")
+        self.print_item("SUCCESS: Blockchain: Registration confirmed")
+        self.print_item("SUCCESS: Integrity: Document unchanged")
         print("\nDocument is authentic and has not been modified.")
         
         return True

@@ -6,7 +6,7 @@ Autonomous agent for compressing and encrypting land documents
 import os
 import sys
 from pathlib import Path
-from typing import Dict, Any, Tuple
+from typing import Dict, Any
 from .base_agent import BaseAgent
 
 # Add PCC to path for compression functionality
@@ -29,6 +29,7 @@ class CompressionAgent(BaseAgent):
         """Check if PCC modules are available"""
         try:
             from crypto.aes import encrypt_data
+            from core.ppc_format import create_ppc_file
             return True
         except ImportError:
             return False
@@ -44,6 +45,9 @@ class CompressionAgent(BaseAgent):
             Dictionary with compression results
         """
         file_path = task_data.get("file_path")
+        encrypt = task_data.get("encrypt", True)
+        compress = task_data.get("compress", True)
+        
         if not file_path or not os.path.exists(file_path):
             return {
                 "success": False,
@@ -53,7 +57,7 @@ class CompressionAgent(BaseAgent):
             
         self.logger.info(f"Processing compression for {file_path}")
         
-        if self.pcc_available:
+        if self.pcc_available and encrypt:
             result = self._process_with_pcc(file_path, task_data.get("metadata", {}))
         else:
             result = self._process_simple(file_path, task_data.get("metadata", {}))
@@ -66,53 +70,51 @@ class CompressionAgent(BaseAgent):
         try:
             from core.ppc_format import create_ppc_file
             from crypto.aes import encrypt_data
-            import json
             
             # Read file content
             with open(file_path, 'rb') as f:
                 file_content = f.read()
-                
-            # Create PPC file with metadata
-            ppc_data = create_ppc_file(
-                original_data=file_content,
-                metadata={
-                    **metadata,
-                    "original_filename": os.path.basename(file_path),
-                    "processed_by": "compression_agent",
-                    "agent_version": "1.0"
-                }
-            )
             
-            # Encrypt the PPC data
-            encrypted_dict = encrypt_data(ppc_data, self.password)
+            original_size = len(file_content)
             
-            # Combine encryption metadata with ciphertext as bytes
-            encrypted_package = {
-                "ciphertext": encrypted_dict["ciphertext"],
-                "salt": encrypted_dict["salt"],
-                "iv": encrypted_dict["iv"],
-                "tag": encrypted_dict["tag"]
+            # Encrypt the file content
+            self.logger.info("Encrypting file content...")
+            encrypted_dict = encrypt_data(file_content, self.password)
+            
+            # Get the ciphertext
+            ciphertext = encrypted_dict["ciphertext"]
+            
+            # Create metadata for PPC file
+            ppc_metadata = {
+                "original_filename": os.path.basename(file_path),
+                "original_size": original_size,
+                "encrypted_size": len(ciphertext),
+                "encryption": "AES-256-GCM",
+                "salt": encrypted_dict["salt"].hex(),
+                "iv": encrypted_dict["iv"].hex(),
+                "tag": encrypted_dict["tag"].hex(),
+                "processed_by": "compression_agent",
+                **metadata
             }
             
-            # Save encrypted file as JSON for proper deserialization
+            # Create output path
             output_path = f"{file_path}.ppc"
-            with open(output_path, 'wb') as f:
-                # Store as JSON with base64-encoded binary data
-                json_data = {
-                    "ciphertext": encrypted_dict["ciphertext"].hex(),
-                    "salt": encrypted_dict["salt"],
-                    "iv": encrypted_dict["iv"],
-                    "tag": encrypted_dict["tag"]
-                }
-                f.write(json.dumps(json_data).encode('utf-8'))
-                
+            
+            # Create PPC file with encrypted data
+            self.logger.info(f"Creating PPC file: {output_path}")
+            create_ppc_file(ciphertext, ppc_metadata, output_path)
+            
+            compression_ratio = round(original_size / len(ciphertext), 2) if len(ciphertext) > 0 else 1.0
+            space_saved = round((1 - len(ciphertext) / original_size) * 100, 1) if original_size > 0 else 0
+            
             return {
                 "success": True,
                 "output_path": output_path,
-                "original_size": len(file_content),
-                "compressed_size": len(encrypted_dict["ciphertext"]),
-                "compression_ratio": round(len(encrypted_dict["ciphertext"]) / len(file_content), 2) if len(file_content) > 0 else 1.0,
-                "method": "PCC_AES256"
+                "original_size": original_size,
+                "compressed_size": len(ciphertext),
+                "compression_ratio": compression_ratio,
+                "space_saved_percent": space_saved,
+                "method": "PCC_AES256_GCM"
             }
             
         except Exception as e:
@@ -122,32 +124,35 @@ class CompressionAgent(BaseAgent):
             return {
                 "success": False,
                 "error": str(e),
-                "method": "PCC_AES256"
+                "method": "PCC_AES256_GCM"
             }
             
     def _process_simple(self, file_path: str, metadata: Dict) -> Dict[str, Any]:
         """Fallback processing without PCC"""
         try:
-            # Simple encryption simulation
+            # Read file
             with open(file_path, 'rb') as f:
                 file_content = f.read()
-                
-            # Simple "encryption" (just for demo)
+            
+            original_size = len(file_content)
+            
+            # Simple XOR encryption for fallback
             encrypted_content = bytearray(file_content)
             for i in range(len(encrypted_content)):
                 encrypted_content[i] ^= ord(self.password[i % len(self.password)])
-                
+            
             # Save encrypted file
-            output_path = f"{file_path}.ppc"
+            output_path = f"{file_path}.enc"
             with open(output_path, 'wb') as f:
                 f.write(encrypted_content)
-                
+            
             return {
                 "success": True,
                 "output_path": output_path,
-                "original_size": len(file_content),
+                "original_size": original_size,
                 "compressed_size": len(encrypted_content),
-                "compression_ratio": 1.0,  # No compression in fallback
+                "compression_ratio": 1.0,
+                "space_saved_percent": 0.0,
                 "method": "SIMPLE_XOR"
             }
             

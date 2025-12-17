@@ -1,3 +1,2 @@
 # If inside pcc module
-from pcc.compressors.compressor import compress
-
+from .compressor import compress_file

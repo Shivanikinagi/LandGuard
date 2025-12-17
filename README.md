@@ -105,7 +105,22 @@ You should see the help menu with available commands!
 
 The project offers two main functionalities:
 
-### 🎯 Option 1: PCC Compression System
+### 🎯 Option 1: Automated Demo
+
+For a quick demonstration of both systems, you can run our automated demo scripts:
+
+**Windows Users:**
+```bash
+# Double-click run_demo.bat or run in command prompt
+run_demo.bat
+```
+
+**Cross-Platform Users:**
+```bash
+python demo_script.py
+```
+
+### 🎯 Option 2: PCC Compression System
 
 **Step 1:** Navigate to the PCC directory
 ```bash
@@ -128,7 +143,7 @@ python main.py pack test.txt --password mySecurePassword123
 - ✅ Uploaded to IPFS
 - ✅ Saved as `test.txt.ppc`
 
-### 🏛️ Option 2: LandGuard Document Processing
+### 🏛️ Option 3: LandGuard Document Processing
 
 **Step 1:** Navigate to the LandGuard directory
 ```bash

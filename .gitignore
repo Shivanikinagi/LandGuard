@@ -10,6 +10,8 @@ ENV/
 env.bak/
 venv.bak/
 .venv/
+api_env/
+data-c/
 
 # Python cache and compiled files
 __pycache__/
@@ -149,4 +151,29 @@ config.yaml
 config.json
 # But keep example configs
 !config.example.yaml
+
+# Node modules and frontend builds
+node_modules/
+.npm
+.yarn
+package-lock.json
+yarn.lock
+dist/
+build/
+
+# Compressed files and test outputs
+*.ppc
+restored_*.txt
+*.zip
+*.tar.gz
+*.7z
+
+# API uploads and processed files
+uploads/
+processed/
+api/uploads/
+api/processed/
+
+# Git large files
+*.pack
 !config.example.json

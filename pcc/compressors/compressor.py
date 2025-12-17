@@ -21,7 +21,7 @@ def compress_file(file_path: str, file_info: dict, model_hint: str = None):
 
         # IMAGE: try VAE compression if appropriate
         if file_info.get("type") == "image" and (model_hint == "vae" or not model_hint):
-            print("🖼️ Using VAE for image compression...")
+            print("IMAGE: Using VAE for image compression...")
             try:
                 # local import so project doesn't require torch/pillow unless used
                 from compressors.image.vae import VAE, load_image, save_latent
@@ -47,13 +47,13 @@ def compress_file(file_path: str, file_info: dict, model_hint: str = None):
 
                 return compressed, "vae-v1", len(compressed)
             except Exception as e:
-                print(f"⚠️ VAE failed: {e}")
+                print(f"WARNING: VAE failed: {e}")
                 traceback.print_exc()
                 # fallback to original
 
         # TEXT: try BPE compression
         if file_info.get("type") == "text":
-            print("📄 Using BPE for text compression...")
+            print("TEXT: Using BPE for text compression...")
             try:
                 from compressors.text.bpe_compressor import compress_text
 
@@ -70,17 +70,17 @@ def compress_file(file_path: str, file_info: dict, model_hint: str = None):
                     compressed = compressed.encode("utf-8")
                 return compressed, "bpe-gpt-lite", len(compressed)
             except Exception as e:
-                print(f"⚠️ BPE failed: {e}")
+                print(f"WARNING: BPE failed: {e}")
                 traceback.print_exc()
                 # fallback to original
 
         # Default fallback: return raw original bytes (no compression)
-        print("⚠️ No AI model applied or compression failed. Returning original data.")
+        print("WARNING: No AI model applied or compression failed. Returning original data.")
         return original_data, "none", original_size
 
     except Exception as outer_e:
         # Fatal error during compress_file — return original with 'none'
-        print(f"❌ Unexpected error inside compress_file: {outer_e}")
+        print(f"ERROR: Unexpected error inside compress_file: {outer_e}")
         traceback.print_exc()
         # try to safely return original bytes if possible
         try:

@@ -1,0 +1,13 @@
+This is a sample land document for testing the LandGuard & PCC system.
+
+Property Details:
+- Address: 123 Main Street, Anytown, ST 12345
+- Owner: John Doe
+- Parcel Number: 123-456-789
+- Lot Size: 0.5 acres
+- Property Type: Residential
+- Assessed Value: $250,000
+- Last Sale Date: January 1, 2020
+- Last Sale Price: $200,000
+
+This document is being processed through the LandGuard fraud detection system to identify any potential anomalies or inconsistencies that might indicate fraudulent activity.

@@ -1,0 +1,16 @@
+LANDGUARD ANALYSIS REPORT
+========================
+
+Property: LD-SAMPLE_LAND_DOCUM
+Date: 2025-12-11 18:59:58
+Risk Score: 2.5/10
+Status: CLEAN
+
+Files Processed: 1
+  - sample_land_document.txt
+
+Anomalies Detected: 1
+  - PRICE_DISCREPANCY: Sale price dropped 60% between transactions
+
+Verification CID: Qm822a9624c2f2bfd60c9963b7f4fe7cefb41deb5ca876
+Blockchain Transaction: 0xb9d7c7845e9280bbc7186ebaf7f3686cb4edaf798d5e3b9bff4015df8f3c3d9c

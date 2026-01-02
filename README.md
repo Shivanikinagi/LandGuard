@@ -1,20 +1,21 @@
-# 🚀 Pied Piper 2.0 — Universal AI-Powered Compression & Storage
+# 🚀 LandGuard - AI-Powered Compression & Decentralized Storage
 
-> **Advanced file compression with military-grade encryption and decentralized storage**
+> **Intelligent file compression with military-grade encryption and blockchain verification**
 
-**Phase 1 Complete** ✅ - Production-ready compression system with AES-256-GCM encryption and IPFS integration.
+A production-ready compression system combining AI-powered compression, AES-256-GCM encryption, IPFS storage, and blockchain verification for secure, efficient file management.
 
 ---
 
-## 🌟 What is Pied Piper 2.0?
+## 🌟 Overview
 
-Pied Piper 2.0 is an intelligent file compression system that:
-- 🤖 **Compresses** your files using AI-powered algorithms
-- 🔒 **Encrypts** them with military-grade AES-256-GCM encryption
-- 🌐 **Stores** them on the decentralized IPFS network
-- 📦 **Packages** everything in a custom `.ppc` container format
+LandGuard is an advanced file compression and storage system that:
+- 🤖 **Compresses** files using intelligent algorithms (Huffman, VAE)
+- 🔒 **Encrypts** with military-grade AES-256-GCM encryption
+- 🌐 **Stores** on decentralized IPFS network via Pinata
+- ⛓️ **Verifies** on Polygon blockchain for tamper-proof records
+- 📦 **Packages** in custom `.ppc` container format
 
-Perfect for secure file storage, sharing, and archiving!
+Perfect for secure document storage, data archiving, and decentralized file sharing!
 
 ---
 
@@ -42,30 +43,16 @@ Before installing, make sure you have:
 
 ## 🚀 Quick Start
 
-### Automated Setup (Recommended)
+### Docker Deployment (Recommended)
 
-**Windows PowerShell:**
-```powershell
-.\setup.ps1
-```
-
-**Linux/Mac:**
 ```bash
-chmod +x setup.sh
-./setup.sh
-```
+# Clone the repository
+git clone https://github.com/Shivanikinagi/LandGuard.git
+cd LandGuard
 
-The automated setup will:
-- Create virtual environments
-- Install all dependencies
-- Set up configuration files
-- Prepare your development environment
-
-### Docker Deployment (Production)
-```bash
 # Configure environment
 cp .env.example .env
-# Edit .env with your API keys
+# Edit .env with your Pinata JWT token
 
 # Start all services
 docker-compose up -d
@@ -73,13 +60,13 @@ docker-compose up -d
 
 ### Manual Installation
 
-#### Step 1: Clone the Repository
+**Step 1: Clone the Repository**
 ```bash
-git clone https://github.com/Parthkk90/compression-.git
-cd compression-
+git clone https://github.com/Shivanikinagi/LandGuard.git
+cd LandGuard
 ```
 
-### Step 2: Navigate to the Project Directory
+**Step 2: Navigate to the PCC Directory
 ```bash
 cd pcc
 ```
@@ -750,15 +737,9 @@ black .
 
 ### Need Help?
 
-- 🐛 **Bug Reports:** [GitHub Issues](https://github.com/Parthkk90/compression-/issues)
-- 💬 **Questions:** [GitHub Discussions](https://github.com/Parthkk90/compression-/discussions)
-- 📧 **Email:** parth9545kk@gmail.com
-- 🌐 **Website:** [Coming Soon]
-
-### Response Time
-- Critical bugs: 24-48 hours
-- Feature requests: 1-2 weeks
-- General questions: 2-3 days
+- 🐛 **Bug Reports:** [GitHub Issues](https://github.com/Shivanikinagi/LandGuard/issues)
+- 💬 **Questions:** [GitHub Discussions](https://github.com/Shivanikinagi/LandGuard/discussions)
+- 🌐 **Documentation:** [QUICK_START.md](QUICK_START.md) | [USAGE.md](USAGE.md)
 
 ---
 
@@ -805,46 +786,52 @@ Special thanks to:
 
 ---
 
-## 📚 Deployment Documentation
+## � Docker Deployment
 
-Ready to deploy? We've got you covered with comprehensive guides:
+The recommended way to deploy LandGuard is using Docker:
 
-- **[🚀 QUICK_START.md](QUICK_START.md)** - Get started in minutes
-- **[📖 DEPLOYMENT.md](DEPLOYMENT.md)** - Complete deployment guide for all platforms
-- **[⛓️ BLOCKCHAIN_DEPLOYMENT.md](BLOCKCHAIN_DEPLOYMENT.md)** - Smart contract deployment
-- **[📦 DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md)** - Overview of deployment options
-
-### Deployment Options:
-- **Local Development**: Automated setup scripts
-- **Docker**: Complete containerized deployment
-- **Production Server**: Ubuntu/Debian with systemd
-- **Cloud**: AWS, GCP, Azure, DigitalOcean, Heroku
-- **Blockchain**: Polygon Amoy testnet and mainnet
-
-Quick commands:
 ```bash
-# Automated setup
-.\setup.ps1        # Windows
-./setup.sh         # Linux/Mac
-
-# Docker deployment
+# Build and start all services
 docker-compose up -d
 
-# Check the guides for more options!
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
 ```
 
+**Services:**
+- **PCC**: Compression service on port 8000
+- **LandGuard**: Agent orchestration on port 8001
+- **API**: REST API interface
+- **Nginx**: Reverse proxy (production)
 
-### Q3 2025
-- 📋 Batch processing
-- 📋 Compression quality presets
-- 📋 API development
-- 📋 Docker support
+For production deployment, see [QUICK_START.md](QUICK_START.md) and [USAGE.md](USAGE.md).
 
-### Q4 2025
-- 💡 Cloud deployment
-- 💡 Mobile app
-- 💡 Enterprise features
-- 💡 Performance optimization
+---
+
+## 🎯 Project Roadmap
+
+### ✅ Completed
+- Core compression system (Huffman, VAE)
+- AES-256-GCM encryption
+- IPFS integration via Pinata
+- Blockchain verification on Polygon
+- CLI and API interfaces
+- Docker deployment
+
+### 🔄 In Progress
+- Image decompression optimization
+- Enhanced error handling
+- Performance improvements
+
+### 💡 Planned
+- Video/audio compression
+- Batch processing
+- Web interface
+- Cloud deployment templates
+- Mobile app
 
 ---
 
@@ -852,14 +839,14 @@ docker-compose up -d
 
 ## ⭐ Star This Project!
 
-If you find Pied Piper 2.0 useful, please give it a star on GitHub!
+If you find LandGuard useful, please give it a star on GitHub!
 
-**Built with ❤️ by the Pied Piper Team**
+**Built with ❤️ for secure, decentralized data management**
 
-*Making the world a more compressed place, one file at a time.*
+*Protecting and compressing your data, one file at a time.*
 
 ---
 
-**Version:** 2.0.0 | **Last Updated:** November 2025
+**Version:** 1.0.0 | **Last Updated:** January 2026
 
 </div>

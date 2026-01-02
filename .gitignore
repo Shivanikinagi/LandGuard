@@ -295,3 +295,8 @@ config.json
 
 # GitHub workflows output
 .github/workflows/*.log
+
+# Process ID files
+*.pid
+.pcc.pid
+.landguard.pid

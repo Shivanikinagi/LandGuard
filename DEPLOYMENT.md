@@ -86,12 +86,12 @@ curl -X POST https://your-service.onrender.com/compress \
 
 ```bash
 # Build the image
-docker build -f Dockerfile.pcc -t compression-service .
+docker build -f Dockerfile.pcc -t landguard .
 
 # Run with environment variables
 docker run -p 8000:8000 \
   -e PINATA_JWT=your_jwt_here \
-  compression-service
+  landguard
 ```
 
 ## Heroku Deployment

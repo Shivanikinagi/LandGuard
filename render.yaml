@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: compression-service
+    name: landguard
     env: python
     region: oregon
     plan: free

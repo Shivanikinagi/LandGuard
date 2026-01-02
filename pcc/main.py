@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Pied Piper 2.0 - Main CLI Entry Point
+LandGuard - Main CLI Entry Point
 Advanced file compression with encryption and IPFS storage
 """
 
@@ -21,7 +21,7 @@ from storage.ipfs_client import upload_to_ipfs
 from core.ppc_format import create_ppc_file, PPCFile
 from detector.file_type import detect_file_type
 
-app = typer.Typer(help="🚀 Pied Piper 2.0 - AI-Powered Compression & Storage")
+app = typer.Typer(help="🚀 LandGuard - AI-Powered Compression & Storage")
 console = Console()
 
 
@@ -264,7 +264,7 @@ def version():
     """
     📌 Show version information
     """
-    console.print("\n[cyan bold]🚀 Pied Piper 2.0[/cyan bold]")
+    console.print("\n[cyan bold]🚀 LandGuard[/cyan bold]")
     console.print("[blue]Version:[/blue] 2.0.0")
     console.print("[blue]Phase:[/blue] 1 (Production Ready)")
     console.print("[blue]Features:[/blue]")

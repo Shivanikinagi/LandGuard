@@ -7,20 +7,20 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Retrieve Pinata JWT from environment
-PINATA_JWT = os.getenv("PINATA_JWT")
-
-if not PINATA_JWT:
-    raise ValueError(
-        "PINATA_JWT not found. Please set it in a .env file:\n"
-        "PINATA_JWT=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xxxxx"
-    )
-
 def upload_to_ipfs(file_path: str) -> str:
     """
     Upload a file to IPFS via Pinata.
     Returns a public gateway link.
     """
+    # Retrieve Pinata JWT from environment (lazy loading)
+    PINATA_JWT = os.getenv("PINATA_JWT")
+    
+    if not PINATA_JWT:
+        raise ValueError(
+            "PINATA_JWT not found. Please set it in a .env file or environment variables:\n"
+            "PINATA_JWT=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xxxxx"
+        )
+    
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")
 

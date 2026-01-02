@@ -12,3 +12,13 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.9
+      - key: PINATA_JWT
+        sync: false  # Set this in Render Dashboard > Environment
+      - key: MAX_FILE_SIZE
+        value: 100000000
+      - key: COMPRESSION_LEVEL
+        value: 9
+      - key: ENABLE_IPFS
+        value: true
+      - key: ENVIRONMENT
+        value: production

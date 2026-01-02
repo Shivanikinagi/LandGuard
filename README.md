@@ -40,9 +40,40 @@ Before installing, make sure you have:
 
 ---
 
-## 🚀 Installation Guide
+## 🚀 Quick Start
 
-### Step 1: Clone the Repository
+### Automated Setup (Recommended)
+
+**Windows PowerShell:**
+```powershell
+.\setup.ps1
+```
+
+**Linux/Mac:**
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+The automated setup will:
+- Create virtual environments
+- Install all dependencies
+- Set up configuration files
+- Prepare your development environment
+
+### Docker Deployment (Production)
+```bash
+# Configure environment
+cp .env.example .env
+# Edit .env with your API keys
+
+# Start all services
+docker-compose up -d
+```
+
+### Manual Installation
+
+#### Step 1: Clone the Repository
 ```bash
 git clone https://github.com/Parthkk90/compression-.git
 cd compression-
@@ -216,6 +247,13 @@ python main.py info <ppc_file>
 ✅ **Authentication Tag** - Detects tampering attempts  
 ✅ **No Password Storage** - Password never saved anywhere  
 ✅ **Key Stretching** - PBKDF2 makes cracking extremely slow
+
+### Blockchain Verification
+
+✅ **Immutable Records** - All documents registered on Polygon Mumbai testnet  
+✅ **Transparent Verification** - Transactions visible on [PolygonScan Explorer](https://mumbai.polygonscan.com/)  
+✅ **Decentralized Storage** - IPFS ensures permanent document availability  
+✅ **Tamper-Evident** - Any modification breaks the cryptographic chain
 
 ---
 
@@ -764,6 +802,37 @@ Special thanks to:
 - 🔄 Implement video compression
 - 🔄 Add audio compression
 - 🔄 Web interface prototype
+
+---
+
+## 📚 Deployment Documentation
+
+Ready to deploy? We've got you covered with comprehensive guides:
+
+- **[🚀 QUICK_START.md](QUICK_START.md)** - Get started in minutes
+- **[📖 DEPLOYMENT.md](DEPLOYMENT.md)** - Complete deployment guide for all platforms
+- **[⛓️ BLOCKCHAIN_DEPLOYMENT.md](BLOCKCHAIN_DEPLOYMENT.md)** - Smart contract deployment
+- **[📦 DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md)** - Overview of deployment options
+
+### Deployment Options:
+- **Local Development**: Automated setup scripts
+- **Docker**: Complete containerized deployment
+- **Production Server**: Ubuntu/Debian with systemd
+- **Cloud**: AWS, GCP, Azure, DigitalOcean, Heroku
+- **Blockchain**: Polygon Amoy testnet and mainnet
+
+Quick commands:
+```bash
+# Automated setup
+.\setup.ps1        # Windows
+./setup.sh         # Linux/Mac
+
+# Docker deployment
+docker-compose up -d
+
+# Check the guides for more options!
+```
+
 
 ### Q3 2025
 - 📋 Batch processing

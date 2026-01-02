@@ -1,4 +1,0 @@
-This is a test land document for fraud detection testing.
-Property ID: TEST-46130
-Owner: Test Owner
-Location: Test Location

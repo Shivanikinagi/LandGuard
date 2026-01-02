@@ -1,0 +1,23 @@
+# Production Requirements for PCC (Compression Core)
+# Optimized for production deployment
+
+# Core dependencies
+typer==0.9.0
+cbor2==5.5.1
+cryptography==41.0.7
+requests==2.31.0
+rich==13.7.0
+
+# ASGI Server for Production
+uvicorn[standard]==0.24.0
+gunicorn==21.2.0
+
+# Production Monitoring
+sentry-sdk==1.39.1
+prometheus-client==0.19.0
+
+# Performance & Caching
+redis==5.0.1
+
+# Security
+python-dotenv==1.0.0

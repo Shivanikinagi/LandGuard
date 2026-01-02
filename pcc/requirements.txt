@@ -6,8 +6,8 @@ requests>=2.31.0
 python-dotenv>=1.0.0
 cryptography>=41.0.0
 
-# IPFS upload via web3.storage
-web3storage>=0.3.0
+# IPFS upload via Pinata (web3storage has version issues)
+# IPFS uploads handled via Pinata API in storage/ipfs_client.py
 
 # Optional: For development and testing
 pytest>=8.0.0

@@ -1,378 +1,278 @@
-﻿# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """
-Pied Piper 2.0 — Universal AI-Powered Compression & Storage
+Pied Piper 2.0 - Main CLI Entry Point
+Advanced file compression with encryption and IPFS storage
 """
-from argparse import _SubParsersAction
-import os
-import sys  # Import the sys module
+
 import typer
 from pathlib import Path
-import cbor2
-from core.ppc_format import PPCFile
+from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn
+import os
+import sys
 
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Import detector module with inline definition as fallback
-try:
-    from detector.file_type import detect_file_type
-except:
-    # Inline fallback detector function
-    import mimetypes
-    
-    def detect_file_type(file_path: str) -> dict:
-        path = Path(file_path)
-        ext = path.suffix.lower()
-        mime, _ = mimetypes.guess_type(file_path)
-        
-        if ext in [".txt", ".md", ".rtf", ".log"]:
-            ftype = "text"
-        elif ext in [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp"]:
-            ftype = "image"
-        elif ext in [".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a"]:
-            ftype = "audio"
-        elif ext in [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm"]:
-            ftype = "video"
-        elif ext in [".pdf"]:
-            ftype = "pdf"
-        elif ext in [".zip", ".rar", ".7z", ".tar", ".gz", ".bz2"]:
-            ftype = "archive"
-        elif ext in [".csv", ".xls", ".xlsx"]:
-            ftype = "spreadsheet"
-        elif ext in [".json", ".xml", ".yaml", ".yml"]:
-            ftype = "data"
-        elif ext in [".py", ".java", ".cpp", ".c", ".js", ".ts", ".html", ".css"]:
-            ftype = "code"
-        else:
-            ftype = "binary"
-        
-        return {
-            "type": ftype,
-            "mime": mime if mime else "application/octet-stream"
-        }
+from compressors.compressor import compress_file
+from compressors.decompressor import decompress_file
+from crypto.aes import encrypt_data, decrypt_data
+from storage.ipfs_client import upload_to_ipfs
+from core.ppc_format import create_ppc_file, PPCFile
+from detector.file_type import detect_file_type
 
-# Import modules with inline fallbacks to avoid null bytes issues
-try:
-    from crypto.aes import encrypt_data, decrypt_data
-except:
-    # Inline AES encryption fallback
-    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-    from cryptography.hazmat.primitives import hashes
-    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-    import os
-    
-    def derive_key(password: str, salt: bytes) -> bytes:
-        kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100000)
-        return kdf.derive(password.encode())
-    
-    def encrypt_data(data: bytes, password: str) -> dict:
-        salt = os.urandom(16)
-        iv = os.urandom(12)
-        key = derive_key(password, salt)
-        encryptor = Cipher(algorithms.AES(key), modes.GCM(iv)).encryptor()
-        ciphertext = encryptor.update(data) + encryptor.finalize()
-        return {"ciphertext": ciphertext, "iv": iv, "salt": salt, "tag": encryptor.tag}
-    
-    def decrypt_data(encrypted: dict, password: str) -> bytes:
-        key = derive_key(password, encrypted["salt"])
-        decryptor = Cipher(algorithms.AES(key), modes.GCM(encrypted["iv"], encrypted["tag"])).decryptor()
-        return decryptor.update(encrypted["ciphertext"]) + decryptor.finalize()
+app = typer.Typer(help="🚀 Pied Piper 2.0 - AI-Powered Compression & Storage")
+console = Console()
 
-try:
-    from core.ppc_format import PPCFile
-except:
-    # Inline PPC format fallback
-    import struct
-    import json
-    
-    class PPCFile:
-        def __init__(self, data: bytes, metadata: dict):
-            self.data = data
-            self.metadata = metadata
-        
-        def pack(self) -> bytes:
-            header = json.dumps(self.metadata).encode('utf-8')
-            header_len = len(header)
-            return struct.pack('<I', header_len) + header + self.data
-        
-        @staticmethod
-        def unpack(data: bytes) -> dict:
-            header_len = struct.unpack('<I', data[:4])[0]
-            header = json.loads(data[4:4+header_len].decode('utf-8'))
-            payload = data[4+header_len:]
-            return {"header": header, "data": payload}
-
-try:
-    sys.path.append('..')
-    from storage.ipfs_client import upload_to_ipfs
-except:
-    # Inline IPFS fallback with real Pinata API
-    import requests
-    
-    def upload_to_ipfs(file_path: str) -> str:
-        try:
-            # Install requests if not available
-            try:
-                import requests
-            except ImportError:
-                import subprocess
-                import sys
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
-                import requests
-            
-            PINATA_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIxYTU1ZGM2My1iYzM0LTRlZjUtOGFhMy1mNDM0OWI1M2M4NzgiLCJlbWFpbCI6InBhcnRoMTIyMDA0QGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiJmOTFmZDY4OWQzZGJlNTdmYTRlYyIsInNjb3BlZEtleVNlY3JldCI6IjdlNGRjNTM3MWY5MmQ1ZDRkMjdiMTQ5Yjg0MGUwN2VkZjk1YzQzNjE1Mjc3MzY3YTY4ODIxMDI1MTZiYzU0NzMiLCJleHAiOjE3ODc0NjQwNTN9.4sblpV6zSLFnOiPGYQ8XEIEv8X_RaDun8KRLi4cX-yQ"
-            
-            url = "https://api.pinata.cloud/pinning/pinFileToIPFS"
-            headers = {"Authorization": f"Bearer {PINATA_JWT}"}
-            
-            print(f"🌐 Uploading to IPFS via Pinata...")
-            
-            with open(file_path, "rb") as f:
-                response = requests.post(url, files={"file": f}, headers=headers, timeout=30)
-            
-            print(f"📡 Pinata response: {response.status_code}")
-            
-            if response.status_code == 200:
-                cid = response.json()["IpfsHash"]
-                return f"https://gateway.pinata.cloud/ipfs/{cid}"
-            else:
-                print(f"❌ Pinata error: {response.text}")
-                return f"ipfs://upload-failed-{response.status_code}-{os.path.basename(file_path)}"
-        except Exception as e:
-            print(f"❌ IPFS upload error: {e}")
-            return f"ipfs://error-{os.path.basename(file_path)}"
-
-# --- AI Module Loading with Fallbacks ---
-compress_file = None  # Will be defined below
-decompress_data = None
-
-try:
-    from compressors.compressor import compress_file
-    from compressors.decompressor import decompress_data
-    print("✅ AI compressor loaded")
-except ImportError as e:
-    print(f"🟡 AI not available (ImportError): {e}")
-except Exception as e:
-    print(f"❌ Unexpected error loading AI: {e}")
-
-if decompress_data is None:
-    def decompress_data(data, metadata):
-        model_used = metadata.get("model_used", "none")
-        if model_used != "none":
-            raise ImportError(f"Decompression for model '{model_used}' not available.")
-        return data
-
-# Define fallback if not already defined
-if compress_file is None:
-    def compress_file(file_path: str, file_info: dict, model_hint: str = None):
-        print("⚠️  No AI model — using original data (no compression)")
-        with open(file_path, "rb") as f:
-            data = f.read()
-        return data, "none", len(data)
-
-# ✅ Define the Typer app AFTER imports and function setup
-app = typer.Typer(
-    name="ppc",
-    help="Pied Piper Compressed (PPC) — AI-powered universal compression & decentralized storage"
-)
 
 @app.command()
 def pack(
-    file_path: str = typer.Argument(..., help="Path to the file to compress and upload"),
-    password: str = typer.Option(None, "--password", "-p", prompt=True, hide_input=True, help="Encryption password"),
-    model: str = typer.Option(None, "--model", "-m", help="AI model to use: 'vae', 'bpe', or 'auto'"),
+    file_path: str = typer.Argument(..., help="Path to the file to compress"),
+    password: str = typer.Option(..., "--password", "-p", prompt=True, hide_input=True, help="Encryption password"),
+    output: str = typer.Option(None, "--output", "-o", help="Output .ppc file path"),
+    upload: bool = typer.Option(True, "--upload/--no-upload", help="Upload to IPFS"),
 ):
     """
-    Compress, encrypt, and upload a file to IPFS as .ppc
+    📦 Compress, encrypt, and optionally upload a file to IPFS
     """
-    typer.echo(f"🚀 Packing: {file_path}")
-    
-    if not os.path.exists(file_path):
-        typer.echo(f"❌ File not found: {file_path}")
-        return
-
-    # Read file
-    with open(file_path, "rb") as f:
-        original_data = f.read()
-    typer.echo(f"📄 Read {len(original_data)} bytes")
-
-    # Detect file type
-    file_info = detect_file_type(file_path)
-    typer.echo(f"✅ Detected: {file_info['type']} ({file_info['mime']})")
-
-    # Compression
     try:
-        compressed_data, model_meta = compress_file(file_path, file_info, model)
-        compressed_size = len(compressed_data)
-        model_used = model_meta.get("name", "none")
-        typer.echo(f"🧠 Compressed with: {model_used} → {compressed_size} bytes")
-    except Exception as e:
-        typer.echo(f"⚠️  {e}")
-        compressed_data = original_data
-        compressed_size = len(original_data)
-        model_used = "none"
-        model_meta = {}
-
-    # Define metadata BEFORE using it
-    metadata = {
-        "original_filename": Path(file_path).name,
-        "original_mime_type": file_info["mime"],
-        "file_type": file_info["type"],
-        "model_used": model_used,
-        "original_size_bytes": len(original_data),
-        "compressed_size_bytes": compressed_size,
-        "compression_ratio": len(original_data) / max(compressed_size, 1)
-    }
-
-    # Encryption
-    if password:
-        encrypted = encrypt_data(compressed_data, password)
-        typer.echo(f"🔐 Encrypted")
-    else:
-        encrypted = {"ciphertext": compressed_data, "salt": "", "iv": "", "tag": ""}
-        typer.echo(f"⚠️  Not encrypted (no password)")
-
-    # NOW use the metadata to create PPC file
-    try:
-        ppc = PPCFile(encrypted["ciphertext"], metadata)
-        ppc_blob = ppc.pack()
+        # Validate input file
+        if not Path(file_path).exists():
+            console.print(f"[red]❌ File not found: {file_path}[/red]")
+            raise typer.Exit(code=1)
         
-        output_path = file_path + ".ppc"
-        with open(output_path, "wb") as f:
-            f.write(ppc_blob)
-        typer.echo(f"📦 Saved to {output_path}")
+        console.print(f"[cyan]✅ Packing: {file_path}[/cyan]")
+        
+        # Read file
+        with open(file_path, "rb") as f:
+            original_data = f.read()
+        
+        original_size = len(original_data)
+        console.print(f"[blue]📊 Read {original_size:,} bytes[/blue]")
+        
+        # Detect file type
+        file_info = detect_file_type(file_path)
+        console.print(f"[blue]🔍 Detected: {file_info['category']} ({file_info['mime_type']})[/blue]")
+        
+        # Compress file
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            progress.add_task(description="Compressing...", total=None)
+            compressed_data, algorithm, compressed_size = compress_file(file_path, file_info)
+        
+        if compressed_size < original_size:
+            ratio = original_size / compressed_size
+            console.print(f"[green]📦 Compressed with: {algorithm} → {compressed_size:,} bytes[/green]")
+            console.print(f"[green]📈 Compression Ratio: {ratio:.2f}x ({((original_size - compressed_size) / original_size * 100):.1f}% smaller)[/green]")
+        else:
+            console.print(f"[yellow]📦 Using original data (compression not beneficial)[/yellow]")
+            compressed_data = original_data
+            algorithm = "none"
+            compressed_size = original_size
+        
+        # Encrypt data
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            progress.add_task(description="Encrypting...", total=None)
+            encryption_result = encrypt_data(compressed_data, password)
+        
+        console.print("[green]🔒 Encrypted with AES-256-GCM[/green]")
+        
+        # Create metadata
+        metadata = {
+            "original_filename": Path(file_path).name,
+            "original_size": original_size,
+            "compressed_size": compressed_size,
+            "compression_algorithm": algorithm,
+            "file_type": file_info['mime_type'],
+            "category": file_info['category'],
+            "encryption": "AES-256-GCM",
+        }
+        
+        # Determine output path
+        if output is None:
+            output = f"{file_path}.ppc"
+        
+        # Create .ppc file
+        create_ppc_file(encryption_result['ciphertext'], {
+            **metadata,
+            "salt": encryption_result['salt'],  # Already base64 encoded
+            "iv": encryption_result['iv'],  # Already base64 encoded
+            "tag": encryption_result['tag'],  # Already base64 encoded
+        }, output)
+        
+        console.print(f"[green]💾 Created: {output}[/green]")
+        
+        # Upload to IPFS
+        if upload:
+            try:
+                with Progress(
+                    SpinnerColumn(),
+                    TextColumn("[progress.description]{task.description}"),
+                    console=console,
+                ) as progress:
+                    progress.add_task(description="Uploading to IPFS...", total=None)
+                    ipfs_link = upload_to_ipfs(output)
+                
+                console.print(f"[green]🌐 IPFS Link: {ipfs_link}[/green]")
+            except Exception as e:
+                console.print(f"[yellow]⚠️ IPFS upload failed: {e}[/yellow]")
+                console.print("[yellow]💡 File saved locally. You can upload it later.[/yellow]")
+        
+        console.print("[green bold]✅ Packing complete![/green bold]")
+        
     except Exception as e:
-        typer.echo(f"❌ Packing failed: {e}")
-
-    # --- UPLOAD TO IPFS ---
-    try:
-        link = upload_to_ipfs(output_path)
-        typer.echo(f"🌐 IPFS Link: {link}")
-    except Exception as e:
-        typer.echo(f"⚠️  Upload failed: {e}")
-        raise typer.Exit(1)
+        console.print(f"[red]❌ Error: {e}[/red]")
+        raise typer.Exit(code=1)
 
 
 @app.command()
 def unpack(
-    ppc_path: str = typer.Argument(..., help="Path to the .ppc file to unpack."),
-    password: str = typer.Option(None, "--password", "-p", help="Decryption password (if required)."),
-    output_path: str = typer.Option(None, "--output", "-o", help="Optional: Path to save the unpacked file."),
+    ppc_file: str = typer.Argument(..., help="Path to the .ppc file to decompress"),
+    password: str = typer.Option(..., "--password", "-p", prompt=True, hide_input=True, help="Decryption password"),
+    output: str = typer.Option(None, "--output", "-o", help="Output file path"),
 ):
     """
-    Unpack a .ppc file to its original state.
+    🔓 Decrypt and decompress a .ppc file
     """
-    typer.echo(f"📦 Unpacking: {ppc_path}")
-    if not os.path.exists(ppc_path):
-        typer.echo(f"❌ File not found: {ppc_path}")
-        raise typer.Exit(1)
-
-    # --- READ AND UNPACK .PPC ---
     try:
-        with open(ppc_path, "rb") as f:
-            raw_ppc_data = f.read()
-        unpacked = PPCFile.unpack(raw_ppc_data)
-        metadata = unpacked["header"]
-        data_blob = unpacked["data"]
-        typer.echo("✅ .ppc file format is valid.")
-    except Exception as e:
-        typer.echo(f"❌ Failed to read or parse .ppc file: {e}")
-        raise typer.Exit(1)
-
-    # --- DECRYPTION ---
-    decrypted_data = data_blob
-    if metadata.get("encryption_algo"):
-        try:
-            # Existing decryption code
-            decrypted_data = decrypt_data(encrypted_data, password)
-            typer.echo("✅ Successfully decrypted")
-        except Exception as e:
-            typer.echo(f"❌ [bold red]DECRYPTION FAILED: {e}[/bold red]")
-            typer.echo("This usually means the password is incorrect.")
-            return
-
-    # --- DECOMPRESSION ---
-    try:
-        original_data = decompress_data(decrypted_data, metadata)
-        typer.echo(f"🧠 Decompressed with: {metadata['model_used']}")
-    except Exception as e:
-        typer.echo(f"❌ Decompression failed: {e}")
-        raise typer.Exit(1)
-
-    # --- SAVE ORIGINAL FILE ---
-    if output_path is None:
-        # Use the original filename from metadata, save in current dir
-        output_path = metadata.get("original_filename", "unpacked_file")
-    try:
-        with open(output_path, "wb") as f:
+        # Validate input file
+        if not Path(ppc_file).exists():
+            console.print(f"[red]❌ File not found: {ppc_file}[/red]")
+            raise typer.Exit(code=1)
+        
+        console.print(f"[cyan]🔓 Unpacking: {ppc_file}[/cyan]")
+        
+        # Read .ppc file
+        with open(ppc_file, "rb") as f:
+            ppc_data = f.read()
+        
+        # Unpack .ppc file
+        unpacked = PPCFile.unpack(ppc_data)
+        header = unpacked['header']
+        encrypted_data = unpacked['data']
+        
+        console.print(f"[blue]📋 Original: {header.get('original_filename', 'unknown')}[/blue]")
+        console.print(f"[blue]📊 Size: {header.get('original_size', 0):,} bytes[/blue]")
+        console.print(f"[blue]🔧 Algorithm: {header.get('compression_algorithm', 'unknown')}[/blue]")
+        
+        # Decrypt data
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            progress.add_task(description="Decrypting...", total=None)
+            
+            decrypted_data = decrypt_data({
+                'ciphertext': encrypted_data,
+                'salt': header['salt'],  # Already base64 encoded string
+                'iv': header['iv'],  # Already base64 encoded string
+                'tag': header['tag'],  # Already base64 encoded string
+            }, password)
+        
+        console.print("[green]🔑 Decrypted successfully[/green]")
+        
+        # Decompress data
+        algorithm = header.get('compression_algorithm', 'none')
+        if algorithm != 'none':
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                console=console,
+            ) as progress:
+                progress.add_task(description="Decompressing...", total=None)
+                original_data = decompress_file(decrypted_data, algorithm)
+            
+            console.print(f"[green]📤 Decompressed: {len(decrypted_data):,} → {len(original_data):,} bytes[/green]")
+        else:
+            original_data = decrypted_data
+            console.print("[blue]📤 No decompression needed[/blue]")
+        
+        # Determine output path
+        if output is None:
+            original_name = header.get('original_filename', 'restored_file')
+            output = f"restored_{original_name}"
+        
+        # Write output file
+        with open(output, "wb") as f:
             f.write(original_data)
-        typer.echo(f"🎉 Successfully unpacked to: {output_path}")
+        
+        console.print(f"[green]💾 Restored: {output}[/green]")
+        console.print("[green bold]✅ Unpacking complete![/green bold]")
+        
     except Exception as e:
-        typer.echo(f"❌ Failed to write output file: {e}")
-        raise typer.Exit(1)
+        console.print(f"[red]❌ Error: {e}[/red]")
+        console.print("[yellow]💡 Check your password or file integrity[/yellow]")
+        raise typer.Exit(code=1)
+
 
 @app.command()
 def info(
-    ppc_path: str = typer.Argument(..., help="Path to the .ppc file")
+    ppc_file: str = typer.Argument(..., help="Path to the .ppc file"),
 ):
     """
-    Show metadata of a .ppc file
+    📊 Display information about a .ppc file without extracting
     """
-    if not os.path.exists(ppc_path):
-        typer.echo("❌ File not found")
-        raise typer.Exit(1)
-
     try:
-        from core.ppc_format import PPCFile
-        with open(ppc_path, "rb") as f:
-            raw = f.read()
-        decoded = PPCFile.unpack(raw)
-        header = decoded["header"]
-
-        typer.echo("\n📄 .PPC FILE INFO")
-        typer.echo("=" * 50)
-        import json
-        typer.echo(json.dumps(header, indent=2))
+        # Validate input file
+        if not Path(ppc_file).exists():
+            console.print(f"[red]❌ File not found: {ppc_file}[/red]")
+            raise typer.Exit(code=1)
+        
+        # Read .ppc file
+        with open(ppc_file, "rb") as f:
+            ppc_data = f.read()
+        
+        # Unpack .ppc file
+        unpacked = PPCFile.unpack(ppc_data)
+        header = unpacked['header']
+        
+        console.print("\n[cyan bold]📦 PPC File Information[/cyan bold]\n")
+        console.print(f"[blue]File:[/blue] {ppc_file}")
+        console.print(f"[blue]Original Name:[/blue] {header.get('original_filename', 'N/A')}")
+        console.print(f"[blue]File Type:[/blue] {header.get('category', 'N/A')} ({header.get('file_type', 'N/A')})")
+        console.print(f"[blue]Original Size:[/blue] {header.get('original_size', 0):,} bytes")
+        console.print(f"[blue]Compressed Size:[/blue] {header.get('compressed_size', 0):,} bytes")
+        
+        orig_size = header.get('original_size', 1)
+        comp_size = header.get('compressed_size', 1)
+        if comp_size < orig_size:
+            ratio = orig_size / comp_size
+            savings = ((orig_size - comp_size) / orig_size * 100)
+            console.print(f"[green]Compression Ratio:[/green] {ratio:.2f}x ({savings:.1f}% smaller)")
+        else:
+            console.print(f"[yellow]Compression Ratio:[/yellow] 1.0x (no compression)")
+        
+        console.print(f"[blue]Algorithm:[/blue] {header.get('compression_algorithm', 'N/A')}")
+        console.print(f"[blue]Encryption:[/blue] {header.get('encryption', 'N/A')}")
+        console.print(f"[blue]Format Version:[/blue] {header.get('version', 'N/A')}\n")
+        
     except Exception as e:
-        typer.echo(f"❌ Invalid .ppc file: {e}")
-        raise typer.Exit(1)
+        console.print(f"[red]❌ Error: {e}[/red]")
+        raise typer.Exit(code=1)
 
 
-# ======================
-# Run with: python main.py --help
-# ======================
+@app.command()
+def version():
+    """
+    📌 Show version information
+    """
+    console.print("\n[cyan bold]🚀 Pied Piper 2.0[/cyan bold]")
+    console.print("[blue]Version:[/blue] 2.0.0")
+    console.print("[blue]Phase:[/blue] 1 (Production Ready)")
+    console.print("[blue]Features:[/blue]")
+    console.print("  • AI-powered compression")
+    console.print("  • AES-256-GCM encryption")
+    console.print("  • IPFS decentralized storage")
+    console.print("  • Custom .ppc container format\n")
+
+
 if __name__ == "__main__":
     app()
-
-def unpack_command(args):
-    print(f"📦 Unpacking: {args.file} with password '{args.password}'")
-
-    if not os.path.exists(args.file):
-        print(f"❌ File not found: {args.file}")
-        return
-
-    with open(args.file, "rb") as f:
-        raw = f.read()
-
-    # Unpack PPC
-    unpacked = PPCFile.unpack(raw)
-    header = unpacked["header"]
-    payload = unpacked["data"]
-
-    print(f"🔍 Metadata: {header}")
-
-    # Decrypt
-    import cbor2
-    encrypted = cbor2.loads(payload)
-    from crypto.aes import decrypt_data
-    data = decrypt_data(encrypted, args.password)
-
-    # Write output
-    output_file = header.get("original_filename", "restored_file")
-    with open(output_file, "wb") as f:
-        f.write(data)
-    print(f"✅ Restored file: {output_file}")
-
-# Add to argparse
-unpack_parser = _SubParsersAction.add_parser("unpack", help="Decrypt and restore file")
-unpack_parser.add_argument("file", help="Path to the .ppc file")
-unpack_parser.add_argument("--password", required=True, help="Decryption password")
-unpack_parser.set_defaults(func=unpack_command)

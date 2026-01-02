@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: piedpiper-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-piedpiper}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-landguard}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-piedpiper}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - piedpiper-network
+
+  # PCC Service (Compression Core)
+  pcc:
+    build:
+      context: .
+      dockerfile: Dockerfile.pcc
+    container_name: piedpiper-pcc
+    environment:
+      - PINATA_API_KEY=${PINATA_API_KEY}
+      - PINATA_SECRET_KEY=${PINATA_SECRET_KEY}
+      - PINATA_JWT=${PINATA_JWT}
+      - MAX_FILE_SIZE=${MAX_FILE_SIZE:-100000000}
+      - COMPRESSION_LEVEL=${COMPRESSION_LEVEL:-9}
+      - ENABLE_IPFS=${ENABLE_IPFS:-true}
+    volumes:
+      - pcc_data:/app/data
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - piedpiper-network
+    restart: unless-stopped
+
+  # LandGuard Service (Backend API)
+  landguard:
+    build:
+      context: .
+      dockerfile: Dockerfile.landguard
+    container_name: piedpiper-landguard
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-piedpiper}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-landguard}
+      - SECRET_KEY=${SECRET_KEY:-your_secret_key_change_this}
+      - ALGORITHM=${ALGORITHM:-HS256}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-https://rpc-amoy.polygon.technology}
+      - CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
+      - PRIVATE_KEY=${PRIVATE_KEY}
+      - PINATA_API_KEY=${PINATA_API_KEY}
+      - PINATA_SECRET_KEY=${PINATA_SECRET_KEY}
+      - API_HOST=0.0.0.0
+      - API_PORT=8001
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
+    volumes:
+      - landguard_data:/app/data
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8001/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - piedpiper-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: piedpiper-nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - pcc
+      - landguard
+    networks:
+      - piedpiper-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  pcc_data:
+    driver: local
+  landguard_data:
+    driver: local
+
+networks:
+  piedpiper-network:
+    driver: bridge

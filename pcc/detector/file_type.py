@@ -9,7 +9,7 @@ from pathlib import Path
 def detect_file_type(file_path: str) -> dict:
     """
     Detects the type and MIME of a file based on its extension.
-    Returns a dictionary with 'type' and 'mime'.
+    Returns a dictionary with 'type', 'category', and 'mime_type'.
     """
     path = Path(file_path)
     ext = path.suffix.lower()
@@ -41,5 +41,7 @@ def detect_file_type(file_path: str) -> dict:
 
     return {
         "type": ftype,
-        "mime": mime if mime else "application/octet-stream"
+        "category": ftype,  # Same as type for compatibility
+        "mime": mime if mime else "application/octet-stream",
+        "mime_type": mime if mime else "application/octet-stream"  # Alternative key
     }

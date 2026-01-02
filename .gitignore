@@ -1,7 +1,24 @@
-# Environment files
+# ======================
+# ENVIRONMENT & SECRETS
+# ======================
 .env
 .env.local
 .env.*.local
+.env.production
+.env.development
+*.env
+
+# API Keys and Secrets
+PINATA_JWT
+secrets/
+keys/
+*.key
+*.pem
+*.crt
+
+# ======================
+# PYTHON
+# ======================
 
 # Virtual environments
 venv/
@@ -10,6 +27,8 @@ ENV/
 env.bak/
 venv.bak/
 .venv/
+*/venv/
+*/env/
 
 # Python cache and compiled files
 __pycache__/
@@ -34,6 +53,31 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+pip-wheel-metadata/
+
+# ======================
+# NODE.JS / BLOCKCHAIN
+# ======================
+node_modules/
+package-lock.json
+yarn.lock
+.npm
+.yarn/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Hardhat
+cache/
+artifacts/
+typechain/
+typechain-types/
+
+# ======================
+# AI/ML FILES
+# ======================
 
 # PyTorch model files and checkpoints
 *.pth
@@ -46,19 +90,47 @@ models/trained/
 *.weights
 
 # Training data and datasets
-data/
-datasets/
-training_data/
-*.jpg
-*.jpeg
-*.png
-*.wav
-*.mp3
-*.mp4
-*.avi
-# But keep sample files
-!samples/
-!pcc/samples/
+da======================
+# IDE & EDITORS
+# ======================
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# PyCharm / IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# IPython
+profile_default/
+ipython_config.py
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+# ======================
 
 # Compressed files and outputs
 *.ppc
@@ -66,6 +138,9 @@ training_data/
 *.tar.gz
 *.rar
 *.7z
+test_file.*
+restored_*
+compressed_*
 # But keep test samples
 !pcc/samples/*.ppc
 !pcc/samples/*.txt
@@ -87,13 +162,9 @@ ipython_config.py
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# Logs
-logs/
-*.log
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Testing
+# ======================
+# TESTING & COVERAGE
+# ======================
 .coverage
 .pytest_cache/
 .tox/
@@ -102,6 +173,24 @@ htmlcov/
 coverage.xml
 *.cover
 .hypothesis/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ======================
+# LOGS & DEBUGGING
+# ======================
+logs/
+*.log
+pip-log.txt
+pip-delete-this-directory.txt
+debug.log
+error.log
+access.log
+
+# ======================
+# TEMPORARY & CACHE
+# ======================
 
 # IPFS and temporary files
 .ipfs/
@@ -109,40 +198,85 @@ temp/
 tmp/
 *.tmp
 *.temp
+.cache/
+.parcel-cache/
 
-# System files
+# ======================
+# OS & SYSTEM FILES
+# ======================
+
+# macOS
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
-ehthumbs.db
-Thumbs.db
+.AppleDouble
+.LSOverride
 
 # Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
 *.lnk
+desktop.ini
+$RECYCLE.BIN/
 
-# Encryption keys and sensitive data
-*.key
-*.pem
-*.crt
-secrets/
-keys/
+# Linux
+*~
+.directory
+.Trash-*
 
-# Large files and binaries
+# ======================
+# LARGE FILES & BINARIES
+# ======================
 *.bin
 *.dat
 *.dump
+*.sqlite
+*.db
 
-# ML experiment tracking
+# ======================
+# ML EXPERIMENT TRACKING
+# ======================
 wandb/
 mlruns/
 .mlflow/
+runs/
+experiments/
 
-# Backup files
+# ======================
+# BACKUP FILES
+# ======================
 *.bak
 *.backup
-*~
+*.old
+*.orig
+*.save
+
+# ======================
+# DEPLOYMENT & BUILD
+# ======================
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Deployment artifacts
+.deployment/
+deploy/
+
+# ======================
+# DOCUMENTATION BUILDS
+# ======================
+docs/_build/
+docs/.doctrees/
+site/
+
+# ======================
+# CONFIGURATION
+# ======================
 
 # Configuration files with sensitive data
 config.yaml
@@ -150,3 +284,14 @@ config.json
 # But keep example configs
 !config.example.yaml
 !config.example.json
+!.env.example
+
+# ======================
+# PROJECT SPECIFIC
+# ======================
+
+# Claude dev helper
+.claude-dev-helper/
+
+# GitHub workflows output
+.github/workflows/*.log

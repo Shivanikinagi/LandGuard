@@ -7,6 +7,9 @@ cbor2==5.5.1
 cryptography==41.0.7
 requests==2.31.0
 rich==13.7.0
+python-magic==0.4.27
+click==8.1.7
+pyzstd==0.16.2
 
 # ASGI Server for Production
 uvicorn[standard]==0.24.0
